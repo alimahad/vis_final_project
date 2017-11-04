@@ -1,0 +1,62 @@
+---
+title: "Data_Cleaning"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(dplyr)
+library(tidyr)
+```
+
+
+
+```{r}
+#grad_rate = read.csv("graduation_rate.csv") #a lot of missing data
+employ_rate = read.csv("employment_rate.csv")
+wage_gap = read.csv("Gender_wage_gap.csv")
+```
+
+```{r}
+employ_rate <-
+  employ_rate %>%
+  filter(!grepl('-', TIME)) %>%
+  filter(grepl('PC_WKGPOP', MEASURE))
+employ_rate$TIME <- as.numeric(as.character(employ_rate$TIME))
+
+employ_rate <-
+  employ_rate %>%
+  filter(TIME >= 2005)
+employ_rate$TIME <- as.factor(employ_rate$TIME)
+
+```
+
+```{r}
+
+wage_gap$TIME <- as.numeric(as.character(wage_gap$TIME))
+wage_gap <-
+  wage_gap %>%
+  filter(TIME >= 2005)
+wage_gap$TIME <- as.factor(wage_gap$TIME)
+```
+
+```{r}
+all_tables <- rbind(employ_rate, wage_gap) #,grad_rate)
+colnames(all_tables)[1] <- "LOCATION"
+write.csv(all_tables, "final_table.csv")
+
+```
+
+```{r}
+#To get info for a single county. Change the string inside grepl for for the
+# country abreviation to get the data for a particular country
+single_country <- 
+  all_tables %>%
+  filter(grepl('CAN', LOCATION))
+
+
+```
