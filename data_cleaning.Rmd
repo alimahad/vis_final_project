@@ -29,9 +29,9 @@ employ_rate <-
 employ_rate$TIME <- as.numeric(as.character(employ_rate$TIME))
 
 employ_rate <-
-  employ_rate %>%
-  filter(TIME >= 2005)
-employ_rate$TIME <- as.factor(employ_rate$TIME)
+  employ_rate #%>%
+ # filter(TIME >= 2005)
+#employ_rate$TIME <- as.factor(employ_rate$TIME)
 
 ```
 
@@ -40,8 +40,10 @@ employ_rate$TIME <- as.factor(employ_rate$TIME)
 wage_gap$TIME <- as.numeric(as.character(wage_gap$TIME))
 wage_gap <-
   wage_gap %>%
-  filter(TIME >= 2005)
-wage_gap$TIME <- as.factor(wage_gap$TIME)
+  filter(SUBJECT == 'TOT')
+
+#wage_gap$TIME <- as.factor(wage_gap$TIME)
+#write.csv( wage_gap,"wagegap_only.csv")
 ```
 
 ```{r}
@@ -58,5 +60,6 @@ single_country <-
   all_tables %>%
   filter(grepl('CAN', LOCATION))
 
+write.csv( single_country,"canada_only.csv")
 
 ```
