@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+    .chart rect {
+        fill: steelblue;
+    }
+
+    .chart text {
+        fill: white;
+        font: 10px sans-serif;
+        text-anchor: end;
+    }
+    rect:hover {
+        fill: brown;
+    }
+
+</style>
+<svg class="chart"></svg>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script>
+
+    var width = 820,
+        barHeight = 20;
+
+    var x = d3.scaleLinear()
+        .range([0, width]);
+
+    var chart = d3.select(".chart")
+        .attr("width", width);
+
+    d3.csv("data/wagegap_only.csv", function(error, csv) {
+        csv.forEach(function (d) {
+            d.TIME = +d.TIME;
+            d.Value = +d.Value;
+
+        });
+        var data = data_for_year(2014, csv);
+        data.sort(function(d1,d2 ){
+            return d2["Value"]-d1["Value"];
+        });
+        console.log(data.length);
+        x.domain([0, d3.max(data, function(d) { return d.Value; })]);
+
+        chart.attr("height", barHeight * data.length);
+
+        var bar = chart.selectAll("g")
+            .data(data)
+            .enter().append("g")
+            .attr("transform", function(d, i) { return "translate(0," + i * barHeight + ")"; });
+
+        bar.append("rect")
+            .attr("width", function(d) { return x(d.Value); })
+            .attr("height", barHeight - 1);
+
+        bar.append("text")
+            .attr("x", function(d) { return x(d.Value) - 3; })
+            .attr("y", barHeight / 2)
+            .attr("dy", ".35em")
+            .text(function(d) { return d.Value; });
+    });
+
+    function data_for_year(year, data){
+        var temp = [];
+        for (var i = 0; i < data.length; i++) {
+            var row = data[i];
+            if (row['TIME'] === year) {
+                temp.push(row);
+            }
+        }
+        return temp;
+    }
+
+
+</script>
