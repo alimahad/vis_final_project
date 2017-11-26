@@ -2,74 +2,218 @@
 <meta charset="utf-8">
 <style>
 
-    .chart rect {
+    .bar {
         fill: steelblue;
     }
 
-    .chart text {
-        fill: white;
-        font: 10px sans-serif;
-        text-anchor: end;
-    }
-    rect:hover {
+    .bar:hover {
         fill: brown;
     }
 
+    .axis--y line {
+        stroke: #0033cc;
+    }
+    .axis--y  path{
+        stroke: #0033cc;
+    }
+    .axis--y  text{
+        stroke: #0033cc;
+        font-weight: normal;
+        font-family: monospace;
+        font-size: 1.2em;
+    }
+    .title{
+        font-family: "Bebas Neue", "sans-serif";
+        font-size: 2.0vw;
+        text-anchor: middle;
+        font-weight: bold;
+        fill: #0033cc;
+
+    }
+    .label {
+        fill: #FAF8A0;
+        font-family: monospace;
+        font-size: 1.01vw;
+        text-anchor: end;
+        font-weight: bold;
+    }
+    body {
+        background-color: #FAF8A0;
+        padding: 0;
+        position:relative;
+        bottom: 0;
+        margin:0;
+    }
+    .chart {
+        position: absolute;
+        bottom:0;
+        top:0;
+        left:0;
+        padding:0;
+        margin:0;
+    }
+    .toolTip {
+        position: absolute;
+        width: 10.5vw;
+        height: auto;
+        padding: 0.5%;
+        background-color: white;
+        -webkit-border-radius: 0.7vw;
+        -moz-border-radius: 0.7vw;
+        border-radius: 0.7vw;
+        -webkit-box-shadow: 0.4vw 0.4vw 1vw rgba(0, 0, 0, 0.4);
+        -moz-box-shadow: 0.4vw 0.4vw 1vw rgba(0, 0, 0, 0.4);
+        box-shadow: 0.4vw 0.4vw 1vw rgba(0, 0, 0, 0.4);
+        pointer-events: none;
+    }
+    .toolTip .countryValue {
+        color: #0033cc;
+        font-family: monospace;
+        font-size: 1.01vw;
+        font-weight: bold;
+    }
+
+    .toolTip .countryName {
+        color: brown;
+        font-family: monospace;
+        font-size: 1.01vw;
+        font-weight: bold;
+    }
+
+
+
+
+
 </style>
+<body>
 <svg class="chart"></svg>
+</body>
+
 <script src="https://d3js.org/d3.v4.min.js"></script>
 <script>
+    var Chart = (function(window, d3){
+        var x, y;
+        d3.csv("data/wagegap_only.csv", init);
 
-    var width = 820,
-        barHeight = 20;
+        function init(csv){
+            csv.forEach(function (d) {
+                d.TIME = +d.TIME;
+                d.Value = +d.Value;
 
-    var x = d3.scaleLinear()
-        .range([0, width]);
+            });
+            var data = data_for_year(2014, csv);
+            data.sort(function(d1,d2 ){
+                return d1["Value"]-d2["Value"];
+            });
 
-    var chart = d3.select(".chart")
-        .attr("width", width);
+            x = d3.scaleBand().domain(data.map(function(d, i) { return i; }))
+            y = d3.scaleLinear().domain([0, d3.max(data, function(d) { return d.Value; })]);
 
-    d3.csv("data/wagegap_only.csv", function(error, csv) {
-        csv.forEach(function (d) {
-            d.TIME = +d.TIME;
-            d.Value = +d.Value;
 
-        });
-        var data = data_for_year(2014, csv);
-        data.sort(function(d1,d2 ){
-            return d2["Value"]-d1["Value"];
-        });
-        console.log(data.length);
-        x.domain([0, d3.max(data, function(d) { return d.Value; })]);
+            var svg = d3.select("svg");
+            var g = svg.append("g");
 
-        chart.attr("height", barHeight * data.length);
+            var tooltip = d3.select("body")
+                .append("div")
+                .attr("class", "toolTip")
+                .style("display", "none");
 
-        var bar = chart.selectAll("g")
-            .data(data)
-            .enter().append("g")
-            .attr("transform", function(d, i) { return "translate(0," + i * barHeight + ")"; });
+            g.append("text")
+                .attr("class", "title")
+                .text("Gender Wage Gap in OECD Countries");
 
-        bar.append("rect")
-            .attr("width", function(d) { return x(d.Value); })
-            .attr("height", barHeight - 1);
 
-        bar.append("text")
-            .attr("x", function(d) { return x(d.Value) - 3; })
-            .attr("y", barHeight / 2)
-            .attr("dy", ".35em")
-            .text(function(d) { return d.Value; });
-    });
 
-    function data_for_year(year, data){
-        var temp = [];
-        for (var i = 0; i < data.length; i++) {
-            var row = data[i];
-            if (row['TIME'] === year) {
-                temp.push(row);
-            }
+            g.selectAll(".bar")
+                .data(data)
+                .enter().append("rect")
+                .attr("class", "bar")
+                .on("mousemove", function(d){
+                    tooltip
+                        .style("display", "inline-block")
+                        .style("left", d3.event.pageX - 70 + "px")
+                        .style("top", d3.event.pageY - 70 + "px")
+                        .html("<span class = 'countryName'><strong>" + d.Country + ": </strong></span><span class = 'countryValue'>" + Math.round(d.Value) + "%</span>");
+                })
+                .on("mouseout", function(d){ tooltip.style("display", "none");});
+
+            g.selectAll(".label")
+                .data(data).enter()
+                .append("text")
+                .attr("class", "label");
+
+            g.append("g")
+                .attr("class", "axis axis--y");
+
+            render();
+
+
         }
-        return temp;
-    }
+        function render(){
+            var width = window.innerWidth * 0.98;
+            var height = window.innerHeight *0.96;
+
+            d3.select(".chart")
+                .attr("width", width)
+                .attr("height", height);
+
+            var svg = d3.select("svg");
+            margin = {top: 20, right: 20, bottom: 30, left: 40};
+            width = +svg.attr("width") - margin.left - margin.right;
+            height = +svg.attr("height") - margin.top  - margin.bottom;
+
+
+            x.rangeRound([0, width]).padding(0.1);
+            y.rangeRound([height, 0]);
+
+            var g = svg.select("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            g.selectAll(".title")
+                .attr("x", width/2)
+                .attr("y", height* 0.04);
+
+            g.selectAll(".bar")
+                .attr("id", function(d) { return d.LOCATION; })
+                .attr("x", function(d, i) { return x(i); })
+                .attr("y", function(d) { return y(d.Value); })
+                .attr("width", x.bandwidth())
+                .attr("height", function(d) { return height - y(d.Value); });
+
+            g.selectAll(".label")
+                .attr("x", function(d, i) { return x(i)+(width*0.02); })
+                .attr("y", height - (height * 0.0098))
+                .attr("dy", ".35em")
+                .text(function(d) { return d.LOCATION; });
+
+            g.select(".axis--y")
+                .call(d3.axisLeft(y).ticks(10))
+                .append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 6)
+                .attr("dy", "0.71em")
+                .attr("text-anchor", "end")
+                .text("Wage gap as a percentage of male wage");
+
+
+        }
+        function data_for_year(year, data){
+            var temp = [];
+            for (var i = 0; i < data.length; i++) {
+                var row = data[i];
+                if (row['TIME'] === year) {
+                    temp.push(row);
+                }
+            }
+            return temp;
+        }
+        return {
+            render : render
+        }
+
+    })(window,d3);
+    window.addEventListener('resize', Chart.render);
+
 
 
 </script>
