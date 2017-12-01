@@ -25,12 +25,19 @@ wage_gap = read.csv("Gender_wage_gap.csv")
 employ_rate <-
   employ_rate %>%
   filter(!grepl('-', TIME)) %>%
-  filter(grepl('PC_WKGPOP', MEASURE))
+  filter(grepl('PC_WKGPOP', MEASURE)) %>%
+  filter(LOCATION != "OECD", LOCATION != "EU28", LOCATION != "G-7",  LOCATION != "EA19")
 employ_rate$TIME <- as.numeric(as.character(employ_rate$TIME))
 
 employ_rate <-
-  employ_rate #%>%
- # filter(TIME >= 2005)
+  employ_rate %>%
+  spread(SUBJECT, Value) %>%
+  mutate(genderDiff = (1-(WOMEN/MEN))*100) %>%
+  select(LOCATION, TIME, genderDiff) %>%
+  left_join(country_codes, by = c("LOCATION" = "CODE"))
+
+  
+   # filter(TIME >= 2005)
 #employ_rate$TIME <- as.factor(employ_rate$TIME)
 
 ```
@@ -40,7 +47,8 @@ employ_rate <-
 wage_gap$TIME <- as.numeric(as.character(wage_gap$TIME))
 wage_gap <-
   wage_gap %>%
-  filter(SUBJECT == 'TOT')
+  filter(SUBJECT == 'TOT') %>%
+  filter(LOCATION != 'EU28')
 
 #wage_gap$TIME <- as.factor(wage_gap$TIME)
 #write.csv( wage_gap,"wagegap_only.csv")
@@ -62,4 +70,34 @@ single_country <-
 
 write.csv( single_country,"canada_only.csv")
 
+```
+
+```{r}
+
+country_codes <- read.csv("FinalProjectD3/src/data/country_codes.csv")
+   
+ 
+
+```
+
+```{r}
+
+country_codes <- 
+  country_codes %>%
+  select('CODE', 'Country')
+   
+
+```
+
+```{r}
+
+wage_gap <- 
+  wage_gap %>%
+  left_join(country_codes, by = c("LOCATION" = "CODE"))
+   
+
+```
+
+```{r}
+write.csv( wage_gap,"wagegap_only.csv")
 ```

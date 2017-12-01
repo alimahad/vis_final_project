@@ -20,7 +20,7 @@
         stroke: #0033cc;
         font-weight: normal;
         font-family: monospace;
-        font-size: 1.2em;
+        font-size: 1vw;
     }
     .title{
         font-family: "Bebas Neue", "sans-serif";
@@ -35,7 +35,7 @@
         font-family: monospace;
         font-size: 1.01vw;
         text-anchor: end;
-        font-weight: bold;
+
     }
     body {
         background-color: #FAF8A0;
@@ -81,6 +81,85 @@
     }
 
 
+    /*code from "https://www.w3schools.com/howto/tryit.asp?filename=tryhow_css_modal2"*/
+    /* The Modal (background) */
+    .modal {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1; /* Sit on top */
+        padding-top: 100px; /* Location of the box */
+        left: 0;
+        top: 0;
+        border-radius: 0.7vw;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgb(0,0,0); /* Fallback color */
+        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    }
+
+
+    /* Modal Content */
+    .modal-content {
+        position: relative;
+        background-color: #fefefe;
+        margin: auto;
+        padding: 0;
+        border: 1px solid #888;
+        width: 80%;
+        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+        -webkit-animation-name: animatetop;
+        -webkit-animation-duration: 0.4s;
+        animation-name: animatetop;
+        border-radius: 0.7vw;
+        animation-duration: 0.4s
+    }
+
+    /* Add Animation */
+    @-webkit-keyframes animatetop {
+        from {top:-300px; opacity:0}
+        to {top:0; opacity:1}
+    }
+
+    @keyframes animatetop {
+        from {top:-300px; opacity:0}
+        to {top:0; opacity:1}
+    }
+
+    /* The Close Button */
+    .close {
+        color: #FAF8A0;;
+        float: right;
+        font-size: 1.5vw;
+        font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: #000;
+        text-decoration: none;
+        cursor: pointer;
+        color: white;
+    }
+
+    .modal-header {
+        padding: 2px 16px;
+        background-color: brown;
+        color: #FAF8A0;
+        font-size: 1.4vw;
+        border-radius: 0.7vw;
+    }
+
+    .modal-body {
+        padding: 2px 16px;
+        font-size: 1.2vw;
+    }
+
+    .modal-footer {
+        padding: 2px 16px;
+        background-color: #5cb85c;
+        color: white;
+    }
 
 
 
@@ -106,9 +185,8 @@
                 return d1["Value"]-d2["Value"];
             });
 
-            x = d3.scaleBand().domain(data.map(function(d, i) { return i; }))
+            x = d3.scaleBand().domain(data.map(function(d, i) { return i; }));
             y = d3.scaleLinear().domain([0, d3.max(data, function(d) { return d.Value; })]);
-
 
             var svg = d3.select("svg");
             var g = svg.append("g");
@@ -118,10 +196,33 @@
                 .attr("class", "toolTip")
                 .style("display", "none");
 
+            var modal = d3.select("body")
+                .append("div")
+                .attr('id', 'country_modal')
+                .attr("class", "modal");
+
+            modal.append("div")
+                .attr("class", "modal-content")
+                .append("div")
+                .attr("class", "modal-header")
+                .append("span")
+                .attr("class","close" )
+                .text("x")
+                .on("click", function(){
+                    modal.style("display","none")
+                });
+
+            modal.select(".modal-header")
+                .append("h2")
+                .attr("id", "country_name");
+
+            modal.select(".modal-content")
+                .append("div")
+                .attr("class","modal-body");
+
             g.append("text")
                 .attr("class", "title")
                 .text("Gender Wage Gap in OECD Countries");
-
 
 
             g.selectAll(".bar")
@@ -135,7 +236,16 @@
                         .style("top", d3.event.pageY - 70 + "px")
                         .html("<span class = 'countryName'><strong>" + d.Country + ": </strong></span><span class = 'countryValue'>" + Math.round(d.Value) + "%</span>");
                 })
-                .on("mouseout", function(d){ tooltip.style("display", "none");});
+                .on("mouseout", function(d){ tooltip.style("display", "none");})
+                .on("click", function(d){
+                    modal.select("#country_name")
+                        .text(d.Country);
+                    modal.style("display", "block");
+                    modal.select(".modal-body")
+                        .append("span")
+                        .text("LALALALAL")
+
+                });
 
             g.selectAll(".label")
                 .data(data).enter()
@@ -197,6 +307,7 @@
 
 
         }
+
         function data_for_year(year, data){
             var temp = [];
             for (var i = 0; i < data.length; i++) {
@@ -211,9 +322,15 @@
             render : render
         }
 
+
     })(window,d3);
     window.addEventListener('resize', Chart.render);
-
+    window.onclick = function(event) {
+        var modal = document.getElementById('country_modal');
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
 
 
 </script>
