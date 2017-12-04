@@ -10,22 +10,25 @@
         fill: brown;
     }
 
-    .line{
+    .line {
         fill: none;
         stroke-width: 2px;
     }
-    #wage_gap_line{
+
+    #wage_gap_line {
         stroke: steelblue;
     }
-    #employ_line{
+
+    #employ_line {
         stroke: red;
-    }
-    .emp_dot{
-        stroke: red;
-        fill:red
     }
 
-    .wage_dot{
+    .emp_dot {
+        stroke: red;
+        fill: red
+    }
+
+    .wage_dot {
         stroke: steelblue;
         fill: steelblue
 
@@ -210,19 +213,34 @@
 <script>
     var Chart = (function (window, d3) {
         var x, y, x_modal, y_modal;
-        d3.csv("data/employ_wage_data2.csv", init);
+        d3.csv("data/wagegap_only.csv", initWage);
 
-        function init(csv) {
+        function initWage(wage_data) {
+            d3.csv("data/employ_rate_final.csv", function (err, emp_data) {
+                if (err) console.log("Error loading data " + err);
+                else {
+                    initAllGraphElements(wage_data, emp_data);
+                }
+            });
+        }
+
+        function initAllGraphElements(wage_data, emp_data) {
             // parse the date / time
             var parseTime = d3.timeParse("%Y");
-            csv.forEach(function (d) {
+            wage_data.forEach(function (d) {
                 d.TIME = parseTime(d.TIME);
                 d.Value = +d.Value;
-                d.genderDiff = +d.genderDiff;
+                //d.genderDiff = +d.genderDiff;
 
             });
 
-            var data = data_for_year(parseTime("2014"), csv);
+            emp_data.forEach(function (d) {
+                d.TIME = parseTime(d.TIME);
+                d.Value = +d.Value;
+
+            });
+
+            var data = data_for_year(parseTime("2014"), wage_data);
             data.sort(function (d1, d2) {
                 return d1["Value"] - d2["Value"];
             });
@@ -317,13 +335,9 @@
                     modal.select("#country_name")
                         .text(d.Country);
                     modal.style("display", "block");
-                    var modal_g = modal.select(".modal-body")
-                        .select("g");
-                    create_graph_modal(modal_g, d.LOCATION, csv);
-                    render_modal();
+                    create_graph_modal(d.LOCATION, wage_data, emp_data);
 
                 });
-
 
             g.selectAll(".label")
                 .data(data).enter()
@@ -411,48 +425,50 @@
             return temp;
         }
 
-        function create_graph_modal(g, country, data) {
-
-            // append the svg obgect to the body of the page
-            // appends a 'group' element to 'svg'
-            // moves the 'group' element to the top left margin
-            var svg = g.select("#modal_svg");
+        function create_graph_modal(country, wage_data, emp_data) {
+            var modal_g = d3.select(".modal-body")
+                .select("g");
+            var svg = modal_g.select("#modal_svg");
             var g = svg.select("#modal_inside_g");
 
-            // Get the data
 
-            data = data_for_country(country, data);
+            // Get the data
+            wage_data = data_for_country(country, wage_data);
+            emp_data = data_for_country(country, emp_data);
+
+            var wage_vals = getMinMaxVals(wage_data);
+            var emp_vals =  getMinMaxVals(emp_data);
+
             // Scale the range of the data
-            x_modal = d3.scaleTime().domain(d3.extent(data, function (d) {
-                return d.TIME;
-            }));
+            x_modal = d3.scaleTime().domain(d3.extent(wage_vals[0].concat(emp_vals[0])));
+
             // x.domain([d3.min(data, function(d) { return d.TIME; }), d3.max(data, function(d) { return d.TIME; })]);
-            y_modal = d3.scaleLinear().domain([0, d3.max(data, function (d) {
-                return Math.max(d.Value, d.genderDiff);
-            })]);
+            y_modal = d3.scaleLinear().domain([0, d3.max(wage_vals[1].concat(emp_vals[1]))]);
 
             // Add the valueline path.
             g.select("#wage_gap_line")
-                .data([data])
+                .data([wage_data])
                 .attr("class", "line");
 
             g.select("#employ_line")
-                .data([data])
+                .data([emp_data])
                 .attr("class", "line");
 
             g.selectAll(".wage_dot").remove();
 
             g.selectAll('dot')
-                .data(data)
+                .data(wage_data)
                 .enter().append("circle")
                 .attr("class", "wage_dot");
 
             g.selectAll(".emp_dot").remove();
 
             g.selectAll("dot")
-                .data(data)
+                .data(emp_data)
                 .enter().append("circle")
                 .attr("class", "emp_dot");
+
+            render_modal();
 
 
         }
@@ -463,29 +479,26 @@
             var margin = {top: 20, right: 20, bottom: 30, left: 50},
                 width = (width * 0.8) - margin.left - margin.right,
                 height = (height * 0.5) - margin.top - margin.bottom;
-
             x_modal.range([0, width]);
             y_modal.range([height, 0]);
             // append the svg obgect to the body of the page
             // appends a 'group' element to 'svg'
             // moves the 'group' element to the top left margin
             // define the line
-            var valueline = d3.line() .defined(function(d) { if(d.Value)return d; })
+            var valueline = d3.line()
                 .x(function (d) {
                     return x_modal(d.TIME);
                 })
                 .y(function (d) {
-                    if(!d.Value) return(y_modal(null));
                     return y_modal(d.Value);
                 });
 
-            var valueline2 = d3.line() .defined(function(d) { if(d.genderDiff) return d; })
+            var valueline2 = d3.line()
                 .x(function (d) {
                     return x_modal(d.TIME);
                 })
                 .y(function (d) {
-                    if(!d.genderDiff) return(y_modal(null));
-                    return y_modal(d.genderDiff);
+                    return y_modal(d.Value);
                 });
             var svg = d3.select("#modal_svg")
                 .attr("width", width + margin.left + margin.right)
@@ -501,8 +514,7 @@
                 .attr("d", valueline);
 
             g.select("#employ_line")
-                .attr("d", valueline2)
-                .style("stroke", "red");
+                .attr("d", valueline2);
 
             g.selectAll('.wage_dot')
                 .attr("r", 3.5)
@@ -510,7 +522,6 @@
                     return x_modal(d.TIME);
                 })
                 .attr("cy", function (d) {
-                    if(!d.Value) return(y_modal(null));
                     return y_modal(d.Value);
                 });
 
@@ -521,8 +532,7 @@
                     return x_modal(d.TIME);
                 })
                 .attr("cy", function (d) {
-                    if(!d.genderDiff) return(y_modal(null));
-                    return y_modal(d.genderDiff);
+                    return y_modal(d.Value);
                 });
 
             // Add the X Axis
@@ -545,12 +555,25 @@
             }
             return temp;
         }
+        function getMinMaxVals(data){
+            var minMaxYear = [data[0]['TIME'],data[0]['TIME'] ];
+            var minMaxPercentages = [data[0]['Value'],data[0]['Value'] ];
+            for (var i = 0; i < data.length; i++) {
+                var row = data[i];
+                if(row['TIME'].getTime() < minMaxYear[0].getTime()) minMaxYear[0] = row['TIME'];
+                else if(row['TIME'].getTime() > minMaxYear[1].getTime()) minMaxYear[1] = row['TIME'];
+                if(row['Value'] < minMaxPercentages[0]) minMaxPercentages[0] = row['Value'];
+                else if(row['Value'] > minMaxPercentages[1]) minMaxPercentages[1] = row['Value'];
+            }
+
+            return [minMaxYear, minMaxPercentages];
+        }
 
 
-    return {
-        render: render,
-        render_modal: render_modal
-    }
+        return {
+            render: render,
+            render_modal: render_modal
+        }
 
 
     })

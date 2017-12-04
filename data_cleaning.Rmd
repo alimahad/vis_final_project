@@ -112,7 +112,7 @@ write.csv( wage_gap,"wagegap_only.csv")
 ```{r}
 joint_data2 <-
   wage_gap %>%
-  inner_join(employ_rate) %>%
+  full_join(employ_rate) %>%
   arrange(LOCATION, TIME)
 ```
 
