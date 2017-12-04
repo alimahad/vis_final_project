@@ -10,19 +10,43 @@
         fill: brown;
     }
 
+    .line{
+        fill: none;
+        stroke-width: 2px;
+    }
+    #wage_gap_line{
+        stroke: steelblue;
+    }
+    #employ_line{
+        stroke: red;
+    }
+    .emp_dot{
+        stroke: red;
+        fill:red
+    }
+
+    .wage_dot{
+        stroke: steelblue;
+        fill: steelblue
+
+    }
+
     .axis--y line {
         stroke: #0033cc;
     }
-    .axis--y  path{
+
+    .axis--y path {
         stroke: #0033cc;
     }
-    .axis--y  text{
+
+    .axis--y text {
         stroke: #0033cc;
         font-weight: normal;
         font-family: monospace;
         font-size: 1vw;
     }
-    .title{
+
+    .title {
         font-family: "Bebas Neue", "sans-serif";
         font-size: 2.0vw;
         text-anchor: middle;
@@ -30,6 +54,7 @@
         fill: #0033cc;
 
     }
+
     .label {
         fill: #FAF8A0;
         font-family: monospace;
@@ -37,21 +62,24 @@
         text-anchor: end;
 
     }
+
     body {
         background-color: #FAF8A0;
         padding: 0;
-        position:relative;
+        position: relative;
         bottom: 0;
-        margin:0;
+        margin: 0;
     }
+
     .chart {
         position: absolute;
-        bottom:0;
-        top:0;
-        left:0;
-        padding:0;
-        margin:0;
+        bottom: 0;
+        top: 0;
+        left: 0;
+        padding: 0;
+        margin: 0;
     }
+
     .toolTip {
         position: absolute;
         width: 10.5vw;
@@ -66,6 +94,7 @@
         box-shadow: 0.4vw 0.4vw 1vw rgba(0, 0, 0, 0.4);
         pointer-events: none;
     }
+
     .toolTip .countryValue {
         color: #0033cc;
         font-family: monospace;
@@ -80,7 +109,6 @@
         font-weight: bold;
     }
 
-
     /*code from "https://www.w3schools.com/howto/tryit.asp?filename=tryhow_css_modal2"*/
     /* The Modal (background) */
     .modal {
@@ -94,10 +122,9 @@
         width: 100%; /* Full width */
         height: 100%; /* Full height */
         overflow: auto; /* Enable scroll if needed */
-        background-color: rgb(0,0,0); /* Fallback color */
-        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        background-color: rgb(0, 0, 0); /* Fallback color */
+        background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
     }
-
 
     /* Modal Content */
     .modal-content {
@@ -107,7 +134,7 @@
         padding: 0;
         border: 1px solid #888;
         width: 80%;
-        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
         -webkit-animation-name: animatetop;
         -webkit-animation-duration: 0.4s;
         animation-name: animatetop;
@@ -117,13 +144,25 @@
 
     /* Add Animation */
     @-webkit-keyframes animatetop {
-        from {top:-300px; opacity:0}
-        to {top:0; opacity:1}
+        from {
+            top: -300px;
+            opacity: 0
+        }
+        to {
+            top: 0;
+            opacity: 1
+        }
     }
 
     @keyframes animatetop {
-        from {top:-300px; opacity:0}
-        to {top:0; opacity:1}
+        from {
+            top: -300px;
+            opacity: 0
+        }
+        to {
+            top: 0;
+            opacity: 1
+        }
     }
 
     /* The Close Button */
@@ -162,7 +201,6 @@
     }
 
 
-
 </style>
 <body>
 <svg class="chart"></svg>
@@ -170,23 +208,31 @@
 
 <script src="https://d3js.org/d3.v4.min.js"></script>
 <script>
-    var Chart = (function(window, d3){
-        var x, y;
-        d3.csv("data/wagegap_only.csv", init);
+    var Chart = (function (window, d3) {
+        var x, y, x_modal, y_modal;
+        d3.csv("data/employ_wage_data2.csv", init);
 
-        function init(csv){
+        function init(csv) {
+            // parse the date / time
+            var parseTime = d3.timeParse("%Y");
             csv.forEach(function (d) {
-                d.TIME = +d.TIME;
+                d.TIME = parseTime(d.TIME);
                 d.Value = +d.Value;
+                d.genderDiff = +d.genderDiff;
 
             });
-            var data = data_for_year(2014, csv);
-            data.sort(function(d1,d2 ){
-                return d1["Value"]-d2["Value"];
+
+            var data = data_for_year(parseTime("2014"), csv);
+            data.sort(function (d1, d2) {
+                return d1["Value"] - d2["Value"];
             });
 
-            x = d3.scaleBand().domain(data.map(function(d, i) { return i; }));
-            y = d3.scaleLinear().domain([0, d3.max(data, function(d) { return d.Value; })]);
+            x = d3.scaleBand().domain(data.map(function (d, i) {
+                return i;
+            }));
+            y = d3.scaleLinear().domain([0, d3.max(data, function (d) {
+                return d.Value;
+            })]);
 
             var svg = d3.select("svg");
             var g = svg.append("g");
@@ -206,10 +252,10 @@
                 .append("div")
                 .attr("class", "modal-header")
                 .append("span")
-                .attr("class","close" )
+                .attr("class", "close")
                 .text("x")
-                .on("click", function(){
-                    modal.style("display","none")
+                .on("click", function () {
+                    modal.style("display", "none")
                 });
 
             modal.select(".modal-header")
@@ -218,7 +264,35 @@
 
             modal.select(".modal-content")
                 .append("div")
-                .attr("class","modal-body");
+                .attr("class", "modal-body");
+            modal.select(".modal-body")
+                .append("g")
+                .append("svg")
+                .attr("id", "modal_svg")
+                .append("g")
+                .attr("id", "modal_inside_g");
+
+
+            var modal_svg = modal.select("#modal_svg");
+            var modal_g = modal_svg.select("#modal_inside_g");
+            modal_g.append("path")
+                .attr("id", "wage_gap_line")
+                .attr("class", "line");
+
+
+            modal_g.append("path")
+                .attr("id", "employ_line")
+                .attr("class", "line");
+
+
+            // Add the X Axis
+            modal_g.append("g")
+                .attr("id", "x_axis_modal");
+
+            // Add the Y Axis
+            modal_g.append("g")
+                .attr("id", "y_axis_modal");
+
 
             g.append("text")
                 .attr("class", "title")
@@ -229,23 +303,27 @@
                 .data(data)
                 .enter().append("rect")
                 .attr("class", "bar")
-                .on("mousemove", function(d){
+                .on("mousemove", function (d) {
                     tooltip
                         .style("display", "inline-block")
                         .style("left", d3.event.pageX - 70 + "px")
                         .style("top", d3.event.pageY - 70 + "px")
                         .html("<span class = 'countryName'><strong>" + d.Country + ": </strong></span><span class = 'countryValue'>" + Math.round(d.Value) + "%</span>");
                 })
-                .on("mouseout", function(d){ tooltip.style("display", "none");})
-                .on("click", function(d){
+                .on("mouseout", function (d) {
+                    tooltip.style("display", "none");
+                })
+                .on("click", function (d) {
                     modal.select("#country_name")
                         .text(d.Country);
                     modal.style("display", "block");
-                    modal.select(".modal-body")
-                        .append("span")
-                        .text("LALALALAL")
+                    var modal_g = modal.select(".modal-body")
+                        .select("g");
+                    create_graph_modal(modal_g, d.LOCATION, csv);
+                    render_modal();
 
                 });
+
 
             g.selectAll(".label")
                 .data(data).enter()
@@ -259,18 +337,19 @@
 
 
         }
-        function render(){
+
+        function render() {
             var width = window.innerWidth * 0.98;
-            var height = window.innerHeight *0.96;
+            var height = window.innerHeight * 0.96;
 
             d3.select(".chart")
                 .attr("width", width)
                 .attr("height", height);
 
             var svg = d3.select("svg");
-            margin = {top: 20, right: 20, bottom: 30, left: 40};
+            var margin = {top: 20, right: 20, bottom: 30, left: 40};
             width = +svg.attr("width") - margin.left - margin.right;
-            height = +svg.attr("height") - margin.top  - margin.bottom;
+            height = +svg.attr("height") - margin.top - margin.bottom;
 
 
             x.rangeRound([0, width]).padding(0.1);
@@ -280,21 +359,34 @@
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
             g.selectAll(".title")
-                .attr("x", width/2)
-                .attr("y", height* 0.04);
+                .attr("x", width / 2)
+                .attr("y", height * 0.04);
 
             g.selectAll(".bar")
-                .attr("id", function(d) { return d.LOCATION; })
-                .attr("x", function(d, i) { return x(i); })
-                .attr("y", function(d) { return y(d.Value); })
+                .attr("id", function (d) {
+                    return d.LOCATION;
+                })
+                .attr("x", function (d, i) {
+                    return x(i);
+                })
+                .attr("y", function (d) {
+                    return y(d.Value);
+                })
                 .attr("width", x.bandwidth())
-                .attr("height", function(d) { return height - y(d.Value); });
+                .attr("height", function (d) {
+                    return height - y(d.Value);
+                });
+
 
             g.selectAll(".label")
-                .attr("x", function(d, i) { return x(i)+(width*0.02); })
+                .attr("x", function (d, i) {
+                    return x(i) + (width * 0.02);
+                })
                 .attr("y", height - (height * 0.0098))
                 .attr("dy", ".35em")
-                .text(function(d) { return d.LOCATION; });
+                .text(function (d) {
+                    return d.LOCATION;
+                });
 
             g.select(".axis--y")
                 .call(d3.axisLeft(y).ticks(10))
@@ -308,24 +400,164 @@
 
         }
 
-        function data_for_year(year, data){
+        function data_for_year(year, data) {
             var temp = [];
             for (var i = 0; i < data.length; i++) {
                 var row = data[i];
-                if (row['TIME'] === year) {
+                if (row['TIME'].getTime() === year.getTime()) {
+                    if (row['Value']) temp.push(row);
+                }
+            }
+            return temp;
+        }
+
+        function create_graph_modal(g, country, data) {
+
+            // append the svg obgect to the body of the page
+            // appends a 'group' element to 'svg'
+            // moves the 'group' element to the top left margin
+            var svg = g.select("#modal_svg");
+            var g = svg.select("#modal_inside_g");
+
+            // Get the data
+
+            data = data_for_country(country, data);
+            // Scale the range of the data
+            x_modal = d3.scaleTime().domain(d3.extent(data, function (d) {
+                return d.TIME;
+            }));
+            // x.domain([d3.min(data, function(d) { return d.TIME; }), d3.max(data, function(d) { return d.TIME; })]);
+            y_modal = d3.scaleLinear().domain([0, d3.max(data, function (d) {
+                return Math.max(d.Value, d.genderDiff);
+            })]);
+
+            // Add the valueline path.
+            g.select("#wage_gap_line")
+                .data([data])
+                .attr("class", "line");
+
+            g.select("#employ_line")
+                .data([data])
+                .attr("class", "line");
+
+            g.selectAll(".wage_dot").remove();
+
+            g.selectAll('dot')
+                .data(data)
+                .enter().append("circle")
+                .attr("class", "wage_dot");
+
+            g.selectAll(".emp_dot").remove();
+
+            g.selectAll("dot")
+                .data(data)
+                .enter().append("circle")
+                .attr("class", "emp_dot");
+
+
+        }
+
+        function render_modal() {
+            var width = window.innerWidth * 0.98;
+            var height = window.innerHeight * 0.96;
+            var margin = {top: 20, right: 20, bottom: 30, left: 50},
+                width = (width * 0.8) - margin.left - margin.right,
+                height = (height * 0.5) - margin.top - margin.bottom;
+
+            x_modal.range([0, width]);
+            y_modal.range([height, 0]);
+            // append the svg obgect to the body of the page
+            // appends a 'group' element to 'svg'
+            // moves the 'group' element to the top left margin
+            // define the line
+            var valueline = d3.line() .defined(function(d) { if(d.Value)return d; })
+                .x(function (d) {
+                    return x_modal(d.TIME);
+                })
+                .y(function (d) {
+                    if(!d.Value) return(y_modal(null));
+                    return y_modal(d.Value);
+                });
+
+            var valueline2 = d3.line() .defined(function(d) { if(d.genderDiff) return d; })
+                .x(function (d) {
+                    return x_modal(d.TIME);
+                })
+                .y(function (d) {
+                    if(!d.genderDiff) return(y_modal(null));
+                    return y_modal(d.genderDiff);
+                });
+            var svg = d3.select("#modal_svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom);
+
+            var g = svg.select("#modal_inside_g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            // Get the data
+
+            // Add the valueline path.
+            g.select("#wage_gap_line")
+                .attr("d", valueline);
+
+            g.select("#employ_line")
+                .attr("d", valueline2)
+                .style("stroke", "red");
+
+            g.selectAll('.wage_dot')
+                .attr("r", 3.5)
+                .attr("cx", function (d) {
+                    return x_modal(d.TIME);
+                })
+                .attr("cy", function (d) {
+                    if(!d.Value) return(y_modal(null));
+                    return y_modal(d.Value);
+                });
+
+            g.selectAll(".emp_dot")
+                .attr("r", 3.5)
+                .attr("class", "emp_dot")
+                .attr("cx", function (d) {
+                    return x_modal(d.TIME);
+                })
+                .attr("cy", function (d) {
+                    if(!d.genderDiff) return(y_modal(null));
+                    return y_modal(d.genderDiff);
+                });
+
+            // Add the X Axis
+            g.select("#x_axis_modal")
+                .attr("transform", "translate(0," + height + ")")
+                .call(d3.axisBottom(x_modal));
+
+            // Add the Y Axis
+            g.select("#y_axis_modal")
+                .call(d3.axisLeft(y_modal));
+        }
+
+        function data_for_country(country, data) {
+            var temp = [];
+            for (var i = 0; i < data.length; i++) {
+                var row = data[i];
+                if (row['LOCATION'] === country) {
                     temp.push(row);
                 }
             }
             return temp;
         }
-        return {
-            render : render
-        }
 
 
-    })(window,d3);
+    return {
+        render: render,
+        render_modal: render_modal
+    }
+
+
+    })
+    (window, d3);
     window.addEventListener('resize', Chart.render);
-    window.onclick = function(event) {
+    window.addEventListener('resize', Chart.render_modal);
+    window.onclick = function (event) {
         var modal = document.getElementById('country_modal');
         if (event.target == modal) {
             modal.style.display = "none";

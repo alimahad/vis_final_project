@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(dplyr)
 library(tidyr)
+library(zoo)
 ```
 
 
@@ -40,6 +41,12 @@ employ_rate <-
    # filter(TIME >= 2005)
 #employ_rate$TIME <- as.factor(employ_rate$TIME)
 
+```
+
+
+```{r}
+
+write.csv(employ_rate, "employ_rate_final.csv")
 ```
 
 ```{r}
@@ -100,4 +107,30 @@ wage_gap <-
 
 ```{r}
 write.csv( wage_gap,"wagegap_only.csv")
+```
+
+```{r}
+joint_data2 <-
+  wage_gap %>%
+  inner_join(employ_rate) %>%
+  arrange(LOCATION, TIME)
+```
+
+
+```{r}
+write.csv(joint_data2, "employ_wage_data2.csv")
+```
+
+```{r}
+emp_rat = which(is.na(joint_data2$genderDiff))
+joint_data2$genderDiff[emp_rat] <- sapply(emp_rat, function(i) with(joint_data2, mean(c(genderDiff[i-1], genderDiff[i+1]))) )
+```
+
+```{r}
+emp_rat = which(is.na(joint_data2$genderDiff))
+joint_data2$genderDiff[emp_rat] = na.approx(joint_data2$genderDiff)
+
+```
+```{r}
+write.csv(joint_data2, "employ_wage_data2.csv")
 ```

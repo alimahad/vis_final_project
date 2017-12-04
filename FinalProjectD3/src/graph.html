@@ -16,21 +16,26 @@
 <script>
 
     // set the dimensions and margins of the graph
+    function create_graph(g) {}
     var margin = {top: 20, right: 20, bottom: 30, left: 50},
         width = 960 - margin.left - margin.right,
         height = 500 - margin.top - margin.bottom;
 
     // parse the date / time
-    var parseTime = d3.timeParse("%y");
+    var parseTime = d3.timeParse("%Y");
 
     // set the ranges
-    var x = d3.scaleLinear().range([0,width]);
+    var x = d3.scaleTime().range([0, width]);
     var y = d3.scaleLinear().range([height, 0]);
 
     // define the line
     var valueline = d3.line()
         .x(function(d) { return x(d.TIME); })
         .y(function(d) { return y(d.Value); });
+
+    var valueline2 = d3.line()
+        .x(function(d) { return x(d.TIME); })
+        .y(function(d) { if(d.genderDiff != null) return y(d.genderDiff); });
 
     // append the svg obgect to the body of the page
     // appends a 'group' element to 'svg'
@@ -43,24 +48,46 @@
             "translate(" + margin.left + "," + margin.top + ")");
 
     // Get the data
-    d3.csv("data/testData.csv", function(error, data) {
+    d3.csv("data/employ_wage_data2.csv", function(error, data) {
         if (error) throw error;
 
         // format the data
         data.forEach(function(d) {
-            d.TIME = +d.TIME;
+            d.TIME = parseTime(d.TIME);
+            console.log(d.TIME);
             d.Value = +d.Value;
+            d.genderDiff =  +d.genderDiff;
         });
-
+        data  = data_for_country("ITA", data);
         // Scale the range of the data
-        x.domain([d3.min(data, function(d) { return d.TIME; }), d3.max(data, function(d) { return d.TIME; })]);
-        y.domain([d3.min(data, function(d) { return d.Value; }), d3.max(data, function(d) { return d.Value; })]);
+        x.domain(d3.extent(data, function(d) { return d.TIME; }));
+       // x.domain([d3.min(data, function(d) { return d.TIME; }), d3.max(data, function(d) { return d.TIME; })]);
+        y.domain([0, d3.max(data, function(d) { return Math.max(d.Value, d.genderDiff); })]);
 
         // Add the valueline path.
         svg.append("path")
             .data([data])
             .attr("class", "line")
             .attr("d", valueline);
+
+        svg.append("path")
+            .data([data])
+            .attr("class", "line")
+            .attr("d", valueline2)
+            .style("stroke", "red");
+        svg.selectAll("dot")
+            .data(data)
+            .enter().append("circle")
+            .attr("r", 3.5)
+            .attr("cx", function(d) { return x(d.TIME); })
+            .attr("cy", function(d) { return y(d.Value); });
+
+        svg.selectAll("dot")
+            .data(data)
+            .enter().append("circle")
+            .attr("r", 3.5)
+            .attr("cx", function(d) { return x(d.TIME); })
+            .attr("cy", function(d) { return y(d.genderDiff); });
 
         // Add the X Axis
         svg.append("g")
@@ -72,6 +99,16 @@
             .call(d3.axisLeft(y));
 
     });
+    function data_for_country(country, data){
+        var temp = [];
+        for (var i = 0; i < data.length; i++) {
+            var row = data[i];
+            if (row['LOCATION'] === country) {
+                temp.push(row);
+            }
+        }
+        return temp;
+    }
 
 </script>
 </body>
