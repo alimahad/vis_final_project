@@ -13,22 +13,23 @@
     .line {
         fill: none;
         stroke-width: 2px;
+
     }
 
     #wage_gap_line {
-        stroke: steelblue;
+        stroke:#6c9dc6 ;
     }
 
     #employ_line {
         stroke: red;
     }
 
-    .emp_dot {
+    .emp_dot, #emp_dot_legend {
         stroke: red;
         fill: red
     }
 
-    .wage_dot {
+    .wage_dot, #wage_dot_legend {
         stroke: steelblue;
         fill: steelblue
 
@@ -74,6 +75,7 @@
         margin: 0;
     }
 
+
     .chart {
         position: absolute;
         bottom: 0;
@@ -118,7 +120,7 @@
         display: none; /* Hidden by default */
         position: fixed; /* Stay in place */
         z-index: 1; /* Sit on top */
-        padding-top: 100px; /* Location of the box */
+        padding-top: 50px; /* Location of the box */
         left: 0;
         top: 0;
         border-radius: 0.7vw;
@@ -210,6 +212,7 @@
 </body>
 
 <script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="d3.legend.js"></script>
 <script>
     var Chart = (function (window, d3) {
         var x, y, x_modal, y_modal;
@@ -311,6 +314,33 @@
             modal_g.append("g")
                 .attr("id", "y_axis_modal");
 
+            modal_g.append("g")
+                .attr("class","legend");
+
+            modal_g.append("text")
+                .attr("id","modal_graph_title")
+                .text("Gender Wage Gap and Employment Gap Over Time");
+
+
+          var legend =  modal_g.select(".legend");
+          legend.append("g")
+                .attr("class", "legend-items")
+                .append("text")
+                .attr("id", "wage_legend")
+                .text("Wage gap as % of male wage");
+
+          legend.select(".legend-items")
+              .append("text")
+                .text("Employment gap as % of male employment")
+                .attr("id", "emp_legend");
+
+          legend.select(".legend-items")
+              .append("circle")
+              .attr("id", "emp_dot_legend");
+
+            legend.select(".legend-items")
+                .append("circle")
+                .attr("id", "wage_dot_legend");
 
             g.append("text")
                 .attr("class", "title")
@@ -448,11 +478,13 @@
             // Add the valueline path.
             g.select("#wage_gap_line")
                 .data([wage_data])
-                .attr("class", "line");
+                .attr("class", "line")
+                .attr("data-legend", "Wage Gap");
 
             g.select("#employ_line")
                 .data([emp_data])
-                .attr("class", "line");
+                .attr("class", "line")
+                .attr("data-legend", "Employment Gap");
 
             g.selectAll(".wage_dot").remove();
 
@@ -467,20 +499,18 @@
                 .data(emp_data)
                 .enter().append("circle")
                 .attr("class", "emp_dot");
-
             render_modal();
-
 
         }
 
         function render_modal() {
-            var width = window.innerWidth * 0.98;
-            var height = window.innerHeight * 0.96;
-            var margin = {top: 20, right: 20, bottom: 30, left: 50},
-                width = (width * 0.8) - margin.left - margin.right,
-                height = (height * 0.5) - margin.top - margin.bottom;
-            x_modal.range([0, width]);
-            y_modal.range([height, 0]);
+            var width = window.innerWidth * 0.98 * 0.8;
+            var height = window.innerHeight * 0.96 * 0.7;
+            var margin = {top: height*0.07, right: width*0.5, bottom: height*0.11, left:width*0.05},
+                graph_width = width  - margin.left - margin.right,
+                graph_height = height - margin.top - 1.5*margin.bottom;
+            x_modal.range([0, graph_width]);
+            y_modal.range([graph_height, 0]);
             // append the svg obgect to the body of the page
             // appends a 'group' element to 'svg'
             // moves the 'group' element to the top left margin
@@ -502,7 +532,7 @@
                 });
             var svg = d3.select("#modal_svg")
                 .attr("width", width + margin.left + margin.right)
-                .attr("height", height + margin.top + margin.bottom);
+                .attr("height", height + margin.top);
 
             var g = svg.select("#modal_inside_g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
@@ -517,7 +547,7 @@
                 .attr("d", valueline2);
 
             g.selectAll('.wage_dot')
-                .attr("r", 3.5)
+                .attr("r", graph_width*0.005)
                 .attr("cx", function (d) {
                     return x_modal(d.TIME);
                 })
@@ -526,7 +556,7 @@
                 });
 
             g.selectAll(".emp_dot")
-                .attr("r", 3.5)
+                .attr("r", graph_width*0.005)
                 .attr("class", "emp_dot")
                 .attr("cx", function (d) {
                     return x_modal(d.TIME);
@@ -537,12 +567,37 @@
 
             // Add the X Axis
             g.select("#x_axis_modal")
-                .attr("transform", "translate(0," + height + ")")
+                .attr("transform", "translate(0," + graph_height + ")")
                 .call(d3.axisBottom(x_modal));
 
             // Add the Y Axis
             g.select("#y_axis_modal")
                 .call(d3.axisLeft(y_modal));
+
+           g.select(".legend")
+                .attr("transform","translate(" + margin.left + "," + margin.top + ")")
+                .style("font-size","12px");
+           g.select("#emp_legend")
+               .attr("x", graph_width*0.001)
+               .attr("y", height - margin.bottom);
+            g.select("#wage_legend")
+                .attr("x", graph_width*0.6)
+                .attr("y", height  - margin.bottom);
+
+            g.select("#emp_dot_legend")
+                .attr("cy", height - (margin.bottom*1.15))
+                .attr("cx",(graph_width*0.001) - 10)
+                .attr("r",graph_width*0.015);
+
+            g.select("#wage_dot_legend")
+                .attr("cy", height - (margin.bottom*1.15))
+                .attr("cx",(graph_width*0.6) - 10)
+                .attr("r",graph_width*0.015);
+
+            g.select("#modal_graph_title")
+                .attr("x", (graph_width/2) - margin.left )
+                .attr("y", margin.top);
+
         }
 
         function data_for_country(country, data) {
