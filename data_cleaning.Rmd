@@ -55,7 +55,8 @@ wage_gap$TIME <- as.numeric(as.character(wage_gap$TIME))
 wage_gap <-
   wage_gap %>%
   filter(SUBJECT == 'TOT') %>%
-  filter(LOCATION != 'EU28')
+  filter(LOCATION != 'EU28') %>%
+  filter(LOCATION != 'LTU')
 
 #wage_gap$TIME <- as.factor(wage_gap$TIME)
 #write.csv( wage_gap,"wagegap_only.csv")
