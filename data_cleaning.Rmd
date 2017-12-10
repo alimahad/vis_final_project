@@ -23,12 +23,14 @@ wage_gap = read.csv("Gender_wage_gap.csv")
 ```
 
 ```{r}
+employ_rate$TIME <- as.numeric(as.character(employ_rate$TIME))
 employ_rate <-
   employ_rate %>%
   filter(!grepl('-', TIME)) %>%
   filter(grepl('PC_WKGPOP', MEASURE)) %>%
+  filter(TIME >= 2000) %>%
   filter(LOCATION != "OECD", LOCATION != "EU28", LOCATION != "G-7",  LOCATION != "EA19")
-employ_rate$TIME <- as.numeric(as.character(employ_rate$TIME))
+
 
 employ_rate <-
   employ_rate %>%
@@ -56,7 +58,8 @@ wage_gap <-
   wage_gap %>%
   filter(SUBJECT == 'TOT') %>%
   filter(LOCATION != 'EU28') %>%
-  filter(LOCATION != 'LTU')
+  filter(LOCATION != 'LTU' && LOCATION != 'CRI') %>%
+  filter(TIME >= 2000)
 
 #wage_gap$TIME <- as.factor(wage_gap$TIME)
 #write.csv( wage_gap,"wagegap_only.csv")

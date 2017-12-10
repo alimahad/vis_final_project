@@ -2,6 +2,52 @@
 <meta charset="utf-8">
 <style>
 
+    .ticks {
+        font-size: 10px;
+    }
+
+    .track,
+    .track-inset,
+    .track-overlay {
+        stroke-linecap: round;
+    }
+
+    .track {
+        stroke: #b1b1b1;
+        stroke-opacity: 0.3;
+        stroke-width: 2px;
+    }
+
+
+    .track-inset {
+        stroke: ghostwhite;
+        stroke-width: 1px;
+    }
+
+    .track-overlay {
+        pointer-events: stroke;
+        stroke-width: 50px;
+        stroke: transparent;
+
+    }
+
+    .handle {
+        stroke-opacity: 0.5;
+        stroke-width: 1.25px;
+        position: absolute;
+        width: 1.2em;
+        height: 1.2em;
+        stroke: #a4a4a4;
+        border: 3px solid;
+        fill: #eee;
+        cursor: pointer;
+        z-index: 3;
+    }
+    .handle:hover{
+        stroke:#999999;
+        stroke-width: 2px;
+    }
+
     .bar {
         fill: steelblue;
     }
@@ -17,7 +63,7 @@
     }
 
     #wage_gap_line {
-        stroke:#6c9dc6 ;
+        stroke: #6c9dc6;
     }
 
     #employ_line {
@@ -60,7 +106,7 @@
     }
 
     .label {
-        fill: #FAF8A0;
+        fill: ghostwhite;
         font-family: monospace;
         font-size: 1.01vw;
         text-anchor: end;
@@ -68,13 +114,12 @@
     }
 
     body {
-        background-color: #FAF8A0;
+        background-color: ghostwhite;
         padding: 0;
         position: relative;
         bottom: 0;
         margin: 0;
     }
-
 
     .chart {
         position: absolute;
@@ -127,14 +172,15 @@
         width: 100%; /* Full width */
         height: 100%; /* Full height */
         overflow: auto; /* Enable scroll if needed */
-        background-color: rgb(0, 0, 0); /* Fallback color */
+        background-color: ghostwhite; /* Fallback color */
         background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+
     }
 
     /* Modal Content */
     .modal-content {
         position: relative;
-        background-color: #fefefe;
+        background-color: ghostwhite;
         margin: auto;
         padding: 0;
         border: 1px solid #888;
@@ -183,7 +229,7 @@
         color: #000;
         text-decoration: none;
         cursor: pointer;
-        color: white;
+        color: ghostwhite;
     }
 
     .modal-header {
@@ -196,6 +242,8 @@
 
     .modal-body {
         padding: 2px 16px;
+        padding-left:0px;
+        margin-left: -100px;
         font-size: 1.2vw;
     }
 
@@ -205,6 +253,31 @@
         color: white;
     }
 
+    .legend text {
+        font-size: 1vw;
+
+    }
+    #right_arrow, #left_arrow{
+        stroke-width: 1px;
+        stroke: none;
+        fill: white;
+        cursor: pointer;
+        top: 50%;
+        margin-top: -45px;
+        margin-left: -35px;
+
+    }
+
+    #right_arrow:hover, #left_arrow:hover {
+        stroke: white;
+    }
+
+    #right_arrow:active, #left_arrow:active {
+        stroke-width: 3;
+        transition: all 100ms ease-in-out;
+    }
+
+
 
 </style>
 <body>
@@ -212,10 +285,10 @@
 </body>
 
 <script src="https://d3js.org/d3.v4.min.js"></script>
-<script src="d3.legend.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <script>
     var Chart = (function (window, d3) {
-        var x, y, x_modal, y_modal;
+        var x, y, x_modal, y_modal, x_for_slider;
         d3.csv("data/wagegap_only.csv", initWage);
 
         function initWage(wage_data) {
@@ -247,6 +320,8 @@
             data.sort(function (d1, d2) {
                 return d1["Value"] - d2["Value"];
             });
+
+            var countryList = getCountryList(data);
 
             x = d3.scaleBand().domain(data.map(function (d, i) {
                 return i;
@@ -315,28 +390,28 @@
                 .attr("id", "y_axis_modal");
 
             modal_g.append("g")
-                .attr("class","legend");
+                .attr("class", "legend");
 
             modal_g.append("text")
-                .attr("id","modal_graph_title")
+                .attr("id", "modal_graph_title")
                 .text("Gender Wage Gap and Employment Gap Over Time");
 
 
-          var legend =  modal_g.select(".legend");
-          legend.append("g")
+            var legend = modal_g.select(".legend");
+            legend.append("g")
                 .attr("class", "legend-items")
                 .append("text")
                 .attr("id", "wage_legend")
                 .text("Wage gap as % of male wage");
 
-          legend.select(".legend-items")
-              .append("text")
+            legend.select(".legend-items")
+                .append("text")
                 .text("Employment gap as % of male employment")
                 .attr("id", "emp_legend");
 
-          legend.select(".legend-items")
-              .append("circle")
-              .attr("id", "emp_dot_legend");
+            legend.select(".legend-items")
+                .append("circle")
+                .attr("id", "emp_dot_legend");
 
             legend.select(".legend-items")
                 .append("circle")
@@ -362,10 +437,9 @@
                     tooltip.style("display", "none");
                 })
                 .on("click", function (d) {
-                    modal.select("#country_name")
-                        .text(d.Country);
+
                     modal.style("display", "block");
-                    create_graph_modal(d.LOCATION, wage_data, emp_data);
+                    create_graph_modal(d.Country, wage_data, emp_data, countryList);
 
                 });
 
@@ -377,11 +451,55 @@
             g.append("g")
                 .attr("class", "axis axis--y");
 
+            modal_g.append("g")
+                .append("svg")
+                .attr("id", "right_arrow")
+                .attr("xmlns", "http://www.w3.org/2000/svg")
+                .append("path")
+                .attr("d", "M7.33 24l-2.83-2.829 9.339-9.175-9.339-9.167 2.83-2.829 12.17 11.996z");
+
+            modal_g.append("g")
+                .append("svg")
+                .attr("id", "left_arrow")
+                .attr("xmlns", "http://www.w3.org/2000/svg")
+                .append("path")
+                .attr("d", "M16.67 0l2.83 2.829-9.339 9.175 9.339 9.167-2.83 2.829-12.17-11.996z");
+            modal_g.append("g")
+                .attr("id", "slider")
+                .append("svg")
+                .append("g")
+                .attr("class", "slider")
+                .append("line")
+                .attr("class", "track")
+                .select(function() { return this.parentNode.appendChild(this.cloneNode(true)); })
+                .attr("class", "track-inset")
+                .select(function() { return this.parentNode.appendChild(this.cloneNode(true)); })
+                .attr("class", "track-overlay");
+
+            var slider = modal_g.select(".slider");
+            slider.insert("circle")
+                .attr("class", "handle")
+                .attr('id', "end_date_handle");
+            slider.insert("circle")
+                .attr("class", "handle")
+                .attr('id', "start_date_handle");
+
             render();
 
 
         }
+        function getCountryList(data){
+            var temp = new Array();
 
+            for (var i = 0; i < data.length; i++) {
+                var row = data[i];
+                if(temp.indexOf(row['Country'])< 0) {
+                    temp.push(row['Country'])
+                }
+            }
+
+            return temp;
+        }
         function render() {
             var width = window.innerWidth * 0.98;
             var height = window.innerHeight * 0.96;
@@ -401,6 +519,7 @@
 
             var g = svg.select("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
 
             g.selectAll(".title")
                 .attr("x", width / 2)
@@ -433,15 +552,15 @@
                 });
 
             g.select(".axis--y")
-                .call(d3.axisLeft(y).ticks(10))
+                .call(d3.axisLeft(y).ticks(10).tickFormat(function (d) {
+                    return d + "%"
+                }))
                 .append("text")
                 .attr("transform", "rotate(-90)")
                 .attr("y", 6)
                 .attr("dy", "0.71em")
                 .attr("text-anchor", "end")
                 .text("Wage gap as a percentage of male wage");
-
-
         }
 
         function data_for_year(year, data) {
@@ -455,25 +574,30 @@
             return temp;
         }
 
-        function create_graph_modal(country, wage_data, emp_data) {
+        function create_graph_modal(country, wage_data_all, emp_data_all, countryList, minMaxYear) {
             var modal_g = d3.select(".modal-body")
                 .select("g");
             var svg = modal_g.select("#modal_svg");
             var g = svg.select("#modal_inside_g");
-
-
+            d3.select("#country_name")
+                .text(country);
+            var parseTime = d3.timeParse("%Y");
             // Get the data
-            wage_data = data_for_country(country, wage_data);
-            emp_data = data_for_country(country, emp_data);
+            var wage_data = data_for_country(country, wage_data_all);
+            var emp_data = data_for_country(country, emp_data_all);
+            var wage_min_max_years = getMinMaxVals(wage_data);
+            var emp_min_max_years = getMinMaxVals(emp_data);
 
-            var wage_vals = getMinMaxVals(wage_data);
-            var emp_vals =  getMinMaxVals(emp_data);
+            if(!minMaxYear) {
+                minMaxYear = d3.extent(wage_min_max_years.concat(emp_min_max_years))
+            }
 
-            // Scale the range of the data
-            x_modal = d3.scaleTime().domain(d3.extent(wage_vals[0].concat(emp_vals[0])));
+            wage_data = filterDataByYear(wage_data, minMaxYear);
+            emp_data = filterDataByYear(emp_data, minMaxYear);
 
+            x_modal = d3.scaleTime().domain( [parseTime(String(minMaxYear[0].getFullYear()-1)), parseTime(String(minMaxYear[1].getFullYear()+1))]);
             // x.domain([d3.min(data, function(d) { return d.TIME; }), d3.max(data, function(d) { return d.TIME; })]);
-            y_modal = d3.scaleLinear().domain([0, d3.max(wage_vals[1].concat(emp_vals[1]))]);
+            y_modal = d3.scaleLinear().domain([0, 100]);
 
             // Add the valueline path.
             g.select("#wage_gap_line")
@@ -499,22 +623,113 @@
                 .data(emp_data)
                 .enter().append("circle")
                 .attr("class", "emp_dot");
+
+            g.select("#right_arrow")
+                .on("click", function(){
+                    var currentIndex = countryList.indexOf(country);
+                    console.log(currentIndex + " " + country + " / " + countryList.length );
+                    if(currentIndex === countryList.length - 1) currentIndex = 0;
+                    else currentIndex = currentIndex +1;
+                    create_graph_modal(countryList[currentIndex], wage_data_all, emp_data_all, countryList);
+                });
+            g.select("#left_arrow")
+                .on("click", function(){
+                    var currentIndex = countryList.indexOf(country);
+                    if(currentIndex === 0) currentIndex = countryList.length - 1;
+                    else currentIndex = currentIndex - 1;
+                    create_graph_modal(countryList[currentIndex], wage_data_all, emp_data_all, countryList);
+                });
+            x_for_slider = d3.scaleTime().domain(d3.extent(wage_min_max_years.concat(emp_min_max_years)));
+
             render_modal();
+
+            d3.select("#x_axis_modal").call(d3.axisBottom(x_modal).ticks(minMaxYear[1].getFullYear() - minMaxYear[0].getFullYear()));
+
+            var slider = g.select(".slider");
+
+            var handle1 = slider.select("#start_date_handle")
+                .attr("r", 9)
+                .attr("cx", x_for_slider(minMaxYear[0]))
+                .call(d3.drag()
+                    .on("start drag", drag)
+                    .on("end", endDrag)
+                );
+
+            var handle2 = slider.select("#end_date_handle")
+                .attr("r", 9)
+                .attr("cx", x_for_slider(minMaxYear[1]))
+                .call(d3.drag()
+                    .on("start drag", drag)
+                    .on("end", endDrag)
+                );
+
+            function drag(d){
+                var x1=x_for_slider.invert((d3.event.x));
+                d3.select(this).attr("cx",getXPositionForSliderHandle(this, x1));
+
+            }
+            function getXPositionForSliderHandle(handle, x1){
+                if(handle.id === "start_date_handle"){
+                    var endDateYear = x_for_slider.invert(d3.select("#end_date_handle").attr("cx"));
+                    if(x1.getTime() >= endDateYear.getTime()){
+                        return x_for_slider(endDateYear.setFullYear(endDateYear.getFullYear() - 1));
+                    }
+                    else {
+                        return x_for_slider(x1);
+                    }
+                }else if(handle.id === "end_date_handle"){
+                    var startDateYear = x_for_slider.invert(d3.select("#start_date_handle").attr("cx"));
+                    if(x1.getTime() <= startDateYear.getTime()){
+                        return x_for_slider(startDateYear.setFullYear(startDateYear.getFullYear() + 1));
+                    }
+                    else {
+                        return x_for_slider(x1);
+                    }
+                }
+
+            }
+
+            function endDrag(d){
+                var x1=roundToExactYear(x_for_slider.invert((d3.event.x)));
+                d3.select(this).attr("cx",getXPositionForSliderHandle(this, x1));
+                var minYear = x_for_slider.invert(handle1.attr("cx"));
+                var maxYear = x_for_slider.invert(handle2.attr("cx"));
+                var minmax = [minYear, maxYear];
+                create_graph_modal(country,wage_data_all, emp_data_all, countryList,minmax )
+            }
+
+        }
+        function filterDataByYear(countryData, minMaxYear){
+            var temp = [];
+            for (var i = 0; i < countryData.length; i++) {
+                var row = countryData[i];
+                if (row['TIME'].getTime() >= minMaxYear[0].getTime() && row['TIME'].getTime() <= minMaxYear[1].getTime() ) {
+                    temp.push(row);
+                }
+            }
+            return temp;
 
         }
 
         function render_modal() {
             var width = window.innerWidth * 0.98 * 0.8;
             var height = window.innerHeight * 0.96 * 0.7;
-            var margin = {top: height*0.07, right: width*0.5, bottom: height*0.11, left:width*0.05},
-                graph_width = width  - margin.left - margin.right,
-                graph_height = height - margin.top - 1.5*margin.bottom;
-            x_modal.range([0, graph_width]);
+            var margin = {top: height * 0.07, right: width * 0.5, bottom: height * 0.11, left: width * 0.05},
+                graph_width = width - margin.left - margin.right,
+                graph_height = height - margin.top - 1.5 * margin.bottom;
+
+            x_modal.range([0, graph_width])
+                .clamp(true);
+            x_for_slider.range([0, graph_width])
+                .clamp(true);
             y_modal.range([graph_height, 0]);
             // append the svg obgect to the body of the page
             // appends a 'group' element to 'svg'
             // moves the 'group' element to the top left margin
             // define the line
+            var formatDateIntoYear = d3.timeFormat("%Y");
+
+
             var valueline = d3.line()
                 .x(function (d) {
                     return x_modal(d.TIME);
@@ -530,16 +745,63 @@
                 .y(function (d) {
                     return y_modal(d.Value);
                 });
+
             var svg = d3.select("#modal_svg")
                 .attr("width", width + margin.left + margin.right)
                 .attr("height", height + margin.top);
 
+
             var g = svg.select("#modal_inside_g")
-                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+                .attr("transform", "translate(" + 3.5*margin.left + "," + margin.top + ")");
 
-            // Get the data
+            g.select("#slider")
+                .attr("transform", "translate(0,"+(height - margin.bottom) + ")")
+                .select("svg")
+                .attr("width",graph_width+50)
+                .attr("height", 50);
 
-            // Add the valueline path.
+            var slider = g.select(".slider")
+                .attr("transform", "translate(10,"+(margin.bottom*0.5) + ")");
+
+            slider.select(".track")
+                .attr("x1", x_for_slider.range()[0])
+                .attr("x2", x_for_slider.range()[1]);
+            slider.select(".track-overlay")
+                .attr("x1", x_for_slider.range()[0])
+                .attr("x2", x_for_slider.range()[1]);
+                    //.on("start drag", function() { console.log(d3.event); hue(x_modal.invert(d3.event.x), d3.event.target);}));
+
+            slider.select(".track-inset")
+                .attr("x1", x_for_slider.range()[0])
+                .attr("x2", x_for_slider.range()[1]);
+
+            slider.selectAll(".ticks").remove();
+
+            slider.selectAll("text").remove();
+
+
+            slider.insert("g", ".track-overlay")
+                .attr("class", "ticks")
+                .attr("transform", "translate(0,0)")
+                .call(d3.axisBottom(x_for_slider).ticks(16).tickFormat(function (d) {
+                    return formatDateIntoYear(d)
+                }));
+
+
+            g.select("#right_arrow")
+                .attr("width", 300)
+                .attr("height", 300)
+                .attr("x",graph_width + margin.right*0.99 )
+                .attr("y", graph_height/2)
+                .attr("viewBox", "0 0 200 200");
+
+            g.select("#left_arrow")
+                .attr("width", 300)
+                .attr("height", 300)
+                .attr("x",graph_width - margin.right*1.13)
+                .attr("y", graph_height/2)
+                .attr("viewBox", "0 0 200 200");
+
             g.select("#wage_gap_line")
                 .attr("d", valueline);
 
@@ -547,7 +809,7 @@
                 .attr("d", valueline2);
 
             g.selectAll('.wage_dot')
-                .attr("r", graph_width*0.005)
+                .attr("r", graph_width * 0.005)
                 .attr("cx", function (d) {
                     return x_modal(d.TIME);
                 })
@@ -556,7 +818,7 @@
                 });
 
             g.selectAll(".emp_dot")
-                .attr("r", graph_width*0.005)
+                .attr("r", graph_width * 0.005)
                 .attr("class", "emp_dot")
                 .attr("cx", function (d) {
                     return x_modal(d.TIME);
@@ -567,63 +829,75 @@
 
             // Add the X Axis
             g.select("#x_axis_modal")
-                .attr("transform", "translate(0," + graph_height + ")")
-                .call(d3.axisBottom(x_modal));
+                .attr("transform", "translate(0," + graph_height + ")");
 
             // Add the Y Axis
             g.select("#y_axis_modal")
-                .call(d3.axisLeft(y_modal));
+                .call(d3.axisLeft(y_modal).ticks(10).tickFormat(function (d) {
+                    return d + "%"
+                }));
 
-           g.select(".legend")
-                .attr("transform","translate(" + margin.left + "," + margin.top + ")")
-                .style("font-size","12px");
-           g.select("#emp_legend")
-               .attr("x", graph_width*0.001)
-               .attr("y", height - margin.bottom);
+            g.select(".legend")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            g.select("#emp_legend")
+                .attr("x", graph_width * 0.001)
+                .attr("y", height - 1.7*margin.bottom);
             g.select("#wage_legend")
-                .attr("x", graph_width*0.6)
-                .attr("y", height  - margin.bottom);
+                .attr("x", graph_width * 0.6)
+                .attr("y", height - 1.7*margin.bottom);
 
             g.select("#emp_dot_legend")
-                .attr("cy", height - (margin.bottom*1.15))
-                .attr("cx",(graph_width*0.001) - 10)
-                .attr("r",graph_width*0.015);
+                .attr("cy", height - (margin.bottom * 1.85))
+                .attr("cx", (graph_width * 0.001) - 10)
+                .attr("r", graph_width * 0.015);
 
             g.select("#wage_dot_legend")
-                .attr("cy", height - (margin.bottom*1.15))
-                .attr("cx",(graph_width*0.6) - 10)
-                .attr("r",graph_width*0.015);
+                .attr("cy", height - (margin.bottom * 1.85))
+                .attr("cx", (graph_width * 0.6) - 10)
+                .attr("r", graph_width * 0.015);
 
             g.select("#modal_graph_title")
-                .attr("x", (graph_width/2) - margin.left )
-                .attr("y", margin.top);
+                .attr("x", (graph_width / 2) - margin.left * 3)
+                .attr("y", -5);
 
         }
+
 
         function data_for_country(country, data) {
             var temp = [];
             for (var i = 0; i < data.length; i++) {
                 var row = data[i];
-                if (row['LOCATION'] === country) {
+                if (row['Country'] === country) {
                     temp.push(row);
                 }
             }
             return temp;
         }
-        function getMinMaxVals(data){
-            var minMaxYear = [data[0]['TIME'],data[0]['TIME'] ];
-            var minMaxPercentages = [data[0]['Value'],data[0]['Value'] ];
-            for (var i = 0; i < data.length; i++) {
-                var row = data[i];
-                if(row['TIME'].getTime() < minMaxYear[0].getTime()) minMaxYear[0] = row['TIME'];
-                else if(row['TIME'].getTime() > minMaxYear[1].getTime()) minMaxYear[1] = row['TIME'];
-                if(row['Value'] < minMaxPercentages[0]) minMaxPercentages[0] = row['Value'];
-                else if(row['Value'] > minMaxPercentages[1]) minMaxPercentages[1] = row['Value'];
+        function roundToExactYear(year){
+            var parseTime = d3.timeParse("%Y");
+            var currentYear = parseTime(String(year.getFullYear()));
+            var yearAfter = parseTime(String(currentYear.getFullYear()+1));
+            if((yearAfter.getTime()-year.getTime()) < 15778476000) {
+                console.log("here");
+                return yearAfter
+            }else{
+
+                return currentYear
             }
 
-            return [minMaxYear, minMaxPercentages];
         }
+        function getMinMaxVals(data) {
+            var minMaxYear = [data[0]['TIME'], data[0]['TIME']];
 
+            for (var i = 0; i < data.length; i++) {
+                var row = data[i];
+                if (row['TIME'].getTime() < minMaxYear[0].getTime()) minMaxYear[0] = row['TIME'];
+                else if (row['TIME'].getTime() > minMaxYear[1].getTime()) minMaxYear[1] = row['TIME'];
+            }
+
+            return minMaxYear;
+        }
 
         return {
             render: render,
@@ -632,7 +906,7 @@
 
 
     })
-    (window, d3);
+    (window, d3, $);
     window.addEventListener('resize', Chart.render);
     window.addEventListener('resize', Chart.render_modal);
     window.onclick = function (event) {
@@ -641,6 +915,5 @@
             modal.style.display = "none";
         }
     }
-
 
 </script>
