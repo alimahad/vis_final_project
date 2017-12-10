@@ -285,7 +285,7 @@
 </body>
 
 <script src="https://d3js.org/d3.v4.min.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
 <script>
     var Chart = (function (window, d3) {
         var x, y, x_modal, y_modal, x_for_slider;
@@ -906,7 +906,7 @@
 
 
     })
-    (window, d3, $);
+    (window, d3);
     window.addEventListener('resize', Chart.render);
     window.addEventListener('resize', Chart.render_modal);
     window.onclick = function (event) {
