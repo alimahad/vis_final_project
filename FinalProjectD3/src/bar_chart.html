@@ -13,21 +13,30 @@
     }
 
     .track {
-        stroke: #b1b1b1;
+        stroke: brown;
         stroke-opacity: 0.3;
-        stroke-width: 2px;
+        stroke-width: 10px;
+
     }
 
 
     .track-inset {
-        stroke: ghostwhite;
+        stroke: none;
         stroke-width: 1px;
     }
+    .ticks path{
+        stroke:none;
+    }
+   .ticks .tick line{
+       stroke: brown;
+       stroke-opacity: 0.8;
+   }
 
     .track-overlay {
         pointer-events: stroke;
         stroke-width: 50px;
         stroke: transparent;
+
 
     }
 
@@ -50,6 +59,7 @@
 
     .bar {
         fill: steelblue;
+        cursor: pointer;
     }
 
     .bar:hover {
@@ -59,23 +69,26 @@
     .line {
         fill: none;
         stroke-width: 2px;
-
     }
 
-    #wage_gap_line {
+    #wage_gap_line, #wage_gap_line_avg {
         stroke: #6c9dc6;
     }
 
-    #employ_line {
+    #employ_line, #employ_line_avg {
         stroke: red;
     }
 
-    .emp_dot, #emp_dot_legend {
+    #wage_gap_line_avg, #employ_line_avg, #emp_avg_dot_legend,#wage_avg_dot_legend {
+        opacity: 0.3
+    }
+
+    .emp_dot, #emp_dot_legend, #emp_avg_dot_legend{
         stroke: red;
         fill: red
     }
 
-    .wage_dot, #wage_dot_legend {
+    .wage_dot, #wage_dot_legend, #wage_avg_dot_legend {
         stroke: steelblue;
         fill: steelblue
 
@@ -158,7 +171,12 @@
         font-size: 1.01vw;
         font-weight: bold;
     }
-
+    #WRD {
+        fill: #0100b4
+    }
+    #WRD:hover {
+        fill: brown
+    }
     /*code from "https://www.w3schools.com/howto/tryit.asp?filename=tryhow_css_modal2"*/
     /* The Modal (background) */
     .modal {
@@ -375,6 +393,13 @@
                 .attr("id", "wage_gap_line")
                 .attr("class", "line");
 
+            modal_g.append("path")
+                .attr("id", "wage_gap_line_avg")
+                .attr("class", "line");
+
+            modal_g.append("path")
+                .attr("id", "employ_line_avg")
+                .attr("class", "line");
 
             modal_g.append("path")
                 .attr("id", "employ_line")
@@ -412,6 +437,24 @@
             legend.select(".legend-items")
                 .append("circle")
                 .attr("id", "emp_dot_legend");
+
+            legend.select(".legend-items")
+                .append("text")
+                .text("World Average Employment gap")
+                .attr("id", "emp_legend_avg");
+
+            legend.select(".legend-items")
+                .append("circle")
+                .attr("id", "emp_avg_dot_legend");
+
+            legend.select(".legend-items")
+                .append("text")
+                .text("World Average Wage gap")
+                .attr("id", "wage_legend_avg");
+
+            legend.select(".legend-items")
+                .append("circle")
+                .attr("id", "wage_avg_dot_legend");
 
             legend.select(".legend-items")
                 .append("circle")
@@ -585,15 +628,22 @@
             // Get the data
             var wage_data = data_for_country(country, wage_data_all);
             var emp_data = data_for_country(country, emp_data_all);
+            var emp_data_avg = data_for_country("World Average", emp_data_all);
+            var wage_data_avg = data_for_country("World Average", wage_data_all);
             var wage_min_max_years = getMinMaxVals(wage_data);
-            var emp_min_max_years = getMinMaxVals(emp_data);
 
+            var emp_min_max_years = getMinMaxVals(emp_data);
+            console.log(wage_data_avg)
+            console.log(wage_data)
             if(!minMaxYear) {
                 minMaxYear = d3.extent(wage_min_max_years.concat(emp_min_max_years))
             }
 
             wage_data = filterDataByYear(wage_data, minMaxYear);
             emp_data = filterDataByYear(emp_data, minMaxYear);
+            emp_data_avg = filterDataByYear(emp_data_avg, minMaxYear);
+            wage_data_avg = filterDataByYear(wage_data_avg, minMaxYear);
+
 
             x_modal = d3.scaleTime().domain( [parseTime(String(minMaxYear[0].getFullYear()-1)), parseTime(String(minMaxYear[1].getFullYear()+1))]);
             // x.domain([d3.min(data, function(d) { return d.TIME; }), d3.max(data, function(d) { return d.TIME; })]);
@@ -601,14 +651,16 @@
 
             // Add the valueline path.
             g.select("#wage_gap_line")
-                .data([wage_data])
-                .attr("class", "line")
-                .attr("data-legend", "Wage Gap");
+                .data([wage_data]);
 
             g.select("#employ_line")
-                .data([emp_data])
-                .attr("class", "line")
-                .attr("data-legend", "Employment Gap");
+                .data([emp_data]);
+            console.log(wage_data_avg)
+            g.select("#wage_gap_line_avg")
+                .data([wage_data_avg]);
+            g.select("#employ_line_avg")
+                .data([emp_data_avg]);
+
 
             g.selectAll(".wage_dot").remove();
 
@@ -711,6 +763,7 @@
 
         }
 
+
         function render_modal() {
             var width = window.innerWidth * 0.98 * 0.8;
             var height = window.innerHeight * 0.96 * 0.7;
@@ -730,7 +783,14 @@
             var formatDateIntoYear = d3.timeFormat("%Y");
 
 
-            var valueline = d3.line()
+            var wage_line_avg = d3.line()
+                .x(function (d) {
+                    return x_modal(d.TIME);
+                })
+                .y(function (d) {
+                    return y_modal(d.Value);
+                });
+            var emp_line_avg = d3.line()
                 .x(function (d) {
                     return x_modal(d.TIME);
                 })
@@ -738,13 +798,22 @@
                     return y_modal(d.Value);
                 });
 
-            var valueline2 = d3.line()
+            var wage_line = d3.line()
                 .x(function (d) {
                     return x_modal(d.TIME);
                 })
                 .y(function (d) {
                     return y_modal(d.Value);
                 });
+
+            var emp_line = d3.line()
+                .x(function (d) {
+                    return x_modal(d.TIME);
+                })
+                .y(function (d) {
+                    return y_modal(d.Value);
+                });
+
 
             var svg = d3.select("#modal_svg")
                 .attr("width", width + margin.left + margin.right)
@@ -803,10 +872,16 @@
                 .attr("viewBox", "0 0 200 200");
 
             g.select("#wage_gap_line")
-                .attr("d", valueline);
+                .attr("d", wage_line);
 
             g.select("#employ_line")
-                .attr("d", valueline2);
+                .attr("d", emp_line);
+
+            g.select("#wage_gap_line_avg")
+                .attr("d", wage_line_avg);
+
+            g.select("#employ_line_avg")
+                .attr("d", emp_line_avg);
 
             g.selectAll('.wage_dot')
                 .attr("r", graph_width * 0.005)
@@ -840,20 +915,40 @@
             g.select(".legend")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+            g.select("#emp_legend_avg")
+                .attr("x", graph_width * 0.001)
+                .attr("y", height - 1.95*margin.bottom);
+
             g.select("#emp_legend")
                 .attr("x", graph_width * 0.001)
-                .attr("y", height - 1.7*margin.bottom);
+                .attr("y", height - 1.50*margin.bottom);
+
             g.select("#wage_legend")
                 .attr("x", graph_width * 0.6)
-                .attr("y", height - 1.7*margin.bottom);
+                .attr("y", height - 1.50*margin.bottom);
+
+            g.select("#wage_legend_avg")
+                .attr("x", graph_width * 0.6)
+                .attr("y", height - 1.95*margin.bottom);
+
 
             g.select("#emp_dot_legend")
-                .attr("cy", height - (margin.bottom * 1.85))
+                .attr("cy", height - (margin.bottom * 1.65))
                 .attr("cx", (graph_width * 0.001) - 10)
                 .attr("r", graph_width * 0.015);
 
             g.select("#wage_dot_legend")
-                .attr("cy", height - (margin.bottom * 1.85))
+                .attr("cy", height - (margin.bottom * 1.65))
+                .attr("cx", (graph_width * 0.6) - 10)
+                .attr("r", graph_width * 0.015);
+
+            g.select("#emp_avg_dot_legend")
+                .attr("cy", height - (margin.bottom * 2.1))
+                .attr("cx", (graph_width * 0.001) - 10)
+                .attr("r", graph_width * 0.015);
+
+            g.select("#wage_avg_dot_legend")
+                .attr("cy", height - (margin.bottom * 2.1))
                 .attr("cx", (graph_width * 0.6) - 10)
                 .attr("r", graph_width * 0.015);
 

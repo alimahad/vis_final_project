@@ -29,16 +29,25 @@ employ_rate <-
   filter(!grepl('-', TIME)) %>%
   filter(grepl('PC_WKGPOP', MEASURE)) %>%
   filter(TIME >= 2000) %>%
-  filter(LOCATION != "OECD", LOCATION != "EU28", LOCATION != "G-7",  LOCATION != "EA19")
+  filter(LOCATION != "OECD", LOCATION != "EU28", LOCATION != "G-7",  LOCATION != "EA19")%>%
+  filter(LOCATION != 'LTU' && LOCATION != 'CRI')
 
 
 employ_rate <-
   employ_rate %>%
   spread(SUBJECT, Value) %>%
-  mutate(genderDiff = (1-(WOMEN/MEN))*100) %>%
-  select(LOCATION, TIME, genderDiff) %>%
+  mutate(Value = (1-(WOMEN/MEN))*100) %>%
+  select(LOCATION, TIME, Value) %>%
   left_join(country_codes, by = c("LOCATION" = "CODE"))
 
+employ_rate_avg <- 
+  employ_rate %>%
+  group_by(TIME)%>%
+  summarize(Value=mean(Value)) %>%
+  mutate(LOCATION = "WRD") %>%
+  mutate(Country = "World Average") %>%
+  select(LOCATION, TIME, Value, Country)
+  
   
    # filter(TIME >= 2005)
 #employ_rate$TIME <- as.factor(employ_rate$TIME)
@@ -60,6 +69,14 @@ wage_gap <-
   filter(LOCATION != 'EU28') %>%
   filter(LOCATION != 'LTU' && LOCATION != 'CRI') %>%
   filter(TIME >= 2000)
+
+wage_gap_avg <- 
+wage_gap %>%
+  group_by(TIME)%>%
+  summarize(Value=mean(Value)) %>%
+  mutate(LOCATION = "WRD") %>%
+  mutate(Country = "World Average") %>%
+  select(LOCATION, TIME, Value, Country)
 
 #wage_gap$TIME <- as.factor(wage_gap$TIME)
 #write.csv( wage_gap,"wagegap_only.csv")
