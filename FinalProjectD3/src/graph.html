@@ -6,6 +6,24 @@
     stroke: steelblue;
     stroke-width: 2px;
 }
+
+.circle {
+  fill: steelblue;
+}
+
+div.tooltip { 
+    position: absolute;     
+    text-align: center;     
+    width: 60px;          
+    height: 28px;         
+    padding: 2px;       
+    font: 12px sans-serif;    
+    background: lightsteelblue; 
+    border: 0px;    
+    border-radius: 8px;     
+    pointer-events: none;     
+}
+
 </style>
 <body>
 
@@ -26,6 +44,13 @@
     var valueline = d3.line()
         .x(function(d) { return x(d.TIME); })
         .y(function(d) { return y(d.Value); });
+
+
+        // Define the div for the tooltip
+    var div = d3.select("body").append("div") 
+    .attr("class", "tooltip")       
+    .style("opacity", 0);
+
     var valueline2 = d3.line()
         .x(function(d) { return x(d.TIME); })
         .y(function(d) { if(d.genderDiff != null) return y(d.genderDiff); });
@@ -66,15 +91,42 @@
         svg.selectAll("dot")
             .data(data)
             .enter().append("circle")
-            .attr("r", 3.5)
+            .attr("r", 6)
             .attr("cx", function(d) { return x(d.TIME); })
             .attr("cy", function(d) { return y(d.Value); });
+            .on("mouseover", function(d) {    
+                div.transition()    
+                .duration(200)    
+                .style("opacity", .9);    
+                div .html(d.Value + "<br/>")  
+                .style("left", (d3.event.pageX) + "px")   
+                .style("top", (d3.event.pageY - 28) + "px");  
+            })          
+            .on("mouseout", function(d) {   
+                div.transition()    
+                .duration(500)    
+                .style("opacity", 0); 
+            });
+
         svg.selectAll("dot")
             .data(data)
             .enter().append("circle")
-            .attr("r", 3.5)
+            .attr("r", 6)
             .attr("cx", function(d) { return x(d.TIME); })
             .attr("cy", function(d) { return y(d.genderDiff); });
+            .on("mouseover", function(d) {    
+                div.transition()    
+                .duration(200)    
+                .style("opacity", .9);    
+                div .html(d.genderDiff + "<br/>")  
+                .style("left", (d3.event.pageX) + "px")   
+                .style("top", (d3.event.pageY - 28) + "px");  
+            })          
+            .on("mouseout", function(d) {   
+                div.transition()    
+                .duration(500)    
+                .style("opacity", 0); 
+            });
         // Add the X Axis
         svg.append("g")
             .attr("transform", "translate(0," + height + ")")
