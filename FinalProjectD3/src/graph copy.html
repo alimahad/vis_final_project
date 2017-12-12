@@ -53,7 +53,7 @@ var svg = d3.select("svg"),
 
 // svg.call(tip);
 
-var x = d3.scaleBand().rangeRound([0, width]).padding(0.1),
+var x = d3.scaleBand().rangeRound([0, width]).padding(10),
     y = d3.scaleLinear().rangeRound([0, 0]);
 var g = svg.append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
@@ -64,7 +64,7 @@ d3.csv("data/wagegap_only2.csv", function(d) {
   if (error) throw error;
 
   var line = d3.line()
-    .x(function(d) { return x(d.Country); })
+    .x(function(d,i) { return x(i+1); })
     .y(function(d) { return y(d.Year2000); })
 
     // Define the div for the tooltip
@@ -74,11 +74,11 @@ d3.csv("data/wagegap_only2.csv", function(d) {
 
 
   //x.domain(data.sort(function(a, b){return b.Year2016-a.Year2000}))
-  x.domain(data.sort(function(a, b) { return d3.ascending(b.Year2016 - b.Year2000, a.Year2016 - a.Year2000); }))
+  x.domain(data.sort(function(a, b) { return d3.ascending(a.Year2016 - a.Year2000, b.Year2016 - b.Year2000); }))
 
 
 
-  x.domain(data.map(function(d) { return d.Country; }));
+  x.domain(data.map(function(d,i) { return i+1; }));
 
 
   y.domain([0, 0]);
@@ -111,7 +111,7 @@ d3.csv("data/wagegap_only2.csv", function(d) {
   .enter().append("circle")
     //.attr("class", "circle")
     .attr("r", 7)
-    .attr("cx", function(d) { return x(d.Country); })
+    .attr("cx", function(d,i) { return x(i+1); })
     .attr("cy", function(d) { return y(d.Year2000); })
     
     .on("mouseover", function(d) {    
