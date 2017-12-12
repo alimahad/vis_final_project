@@ -90,7 +90,8 @@
 
     .wage_dot, #wage_dot_legend, #wage_avg_dot_legend {
         stroke: steelblue;
-        fill: steelblue
+        fill: steelblue;
+        z-index:1;
 
     }
 
@@ -145,7 +146,7 @@
 
     .toolTip {
         position: absolute;
-        width: 10.5vw;
+        width: 13.5vw;
         height: auto;
         padding: 0.5%;
         background-color: white;
@@ -169,7 +170,6 @@
         color: brown;
         font-family: monospace;
         font-size: 1.01vw;
-        font-weight: bold;
     }
     #WRD {
         fill: #0100b4
@@ -236,7 +236,7 @@
 
     /* The Close Button */
     .close {
-        color: #FAF8A0;;
+        color: ghostwhite;;
         float: right;
         font-size: 1.5vw;
         font-weight: bold;
@@ -244,16 +244,16 @@
 
     .close:hover,
     .close:focus {
-        color: #000;
+        font-weight: bold;
         text-decoration: none;
         cursor: pointer;
-        color: ghostwhite;
+
     }
 
     .modal-header {
         padding: 2px 16px;
         background-color: brown;
-        color: #FAF8A0;
+        color: ghostwhite;
         font-size: 1.4vw;
         border-radius: 0.7vw;
     }
@@ -265,11 +265,6 @@
         font-size: 1.2vw;
     }
 
-    .modal-footer {
-        padding: 2px 16px;
-        background-color: #5cb85c;
-        color: white;
-    }
 
     .legend text {
         font-size: 1vw;
@@ -278,16 +273,17 @@
     #right_arrow, #left_arrow{
         stroke-width: 1px;
         stroke: none;
-        fill: white;
+        fill: ghostwhite;
         cursor: pointer;
         top: 50%;
         margin-top: -45px;
         margin-left: -35px;
 
+
     }
 
     #right_arrow:hover, #left_arrow:hover {
-        stroke: white;
+        stroke: ghostwhite;
     }
 
     #right_arrow:active, #left_arrow:active {
@@ -295,7 +291,12 @@
         transition: all 100ms ease-in-out;
     }
 
-
+.year_tooltip{
+    margin:0 0 0 60px;
+    padding-bottom: 0px;
+    font-size: x-large;
+    font-weight: bold;
+}
 
 </style>
 <body>
@@ -389,6 +390,11 @@
 
             var modal_svg = modal.select("#modal_svg");
             var modal_g = modal_svg.select("#modal_inside_g");
+            modal.select(".modal-body").append("div")
+                .attr("class", "toolTip")
+                .attr("id", "modal_tooltip")
+                .style("display", "none");
+
             modal_g.append("path")
                 .attr("id", "wage_gap_line")
                 .attr("class", "line");
@@ -459,6 +465,7 @@
             legend.select(".legend-items")
                 .append("circle")
                 .attr("id", "wage_dot_legend");
+
 
             g.append("text")
                 .attr("class", "title")
@@ -663,18 +670,45 @@
 
 
             g.selectAll(".wage_dot").remove();
+            var modal_tooltip = d3.select("#modal_tooltip");
 
             g.selectAll('dot')
                 .data(wage_data)
                 .enter().append("circle")
-                .attr("class", "wage_dot");
+                .attr("class", "wage_dot")
+                .on("mouseover", function (d) {
+
+                modal_tooltip
+                    .style("display", "inline-block")
+                    .style("left", d3.event.pageX - 70 + "px")
+                    .style("top", d3.event.pageY - 70 + "px")
+                    .html("<p class = 'countryName year_tooltip'>" + d.TIME.getFullYear()+ "</p>" +
+                        "<span class = 'countryName'> Wage Gap: </span><span class = 'countryValue'>" + Math.round(d.Value) + "%</span>" +
+                        "<br><span class = 'countryName'> World Average: </span><span class = 'countryValue'>" + getGapAvgForYear(d.TIME.getFullYear(), wage_data_avg) + "%</span>");
+            })
+                .on("mouseout", function (d) {
+                    modal_tooltip.style("display", "none");
+                });
 
             g.selectAll(".emp_dot").remove();
 
             g.selectAll("dot")
                 .data(emp_data)
                 .enter().append("circle")
-                .attr("class", "emp_dot");
+                .attr("class", "emp_dot")
+                .on("mouseover", function (d) {
+
+                    modal_tooltip
+                        .style("display", "inline-block")
+                        .style("left", d3.event.pageX - 70 + "px")
+                        .style("top", d3.event.pageY - 70 + "px")
+                        .html("<p class = 'countryName year_tooltip'>" + d.TIME.getFullYear()+"</p>" +
+                            "<span class = 'countryName'> Employment Gap: </span><span class = 'countryValue'>" + Math.round(d.Value) + "%</span>" +
+                            "<br><span class = 'countryName'> World Average: </span><span class = 'countryValue'>" + getGapAvgForYear(d.TIME.getFullYear(), emp_data_avg) + "%</span>");
+                })
+                .on("mouseout", function (d) {
+                    modal_tooltip.style("display", "none");
+                });
 
             g.select("#right_arrow")
                 .on("click", function(){
@@ -762,6 +796,15 @@
             return temp;
 
         }
+        function getGapAvgForYear(year, data){
+            for (var i = 0; i < data.length; i++) {
+                var row = data[i];
+                if (row['Country'] === "World Average" && row['TIME'].getFullYear() === year ) {
+                    return Math.round(row['Value'] );
+                }
+            }
+            return "No Data Found"
+        }
 
 
         function render_modal() {
@@ -776,10 +819,7 @@
             x_for_slider.range([0, graph_width])
                 .clamp(true);
             y_modal.range([graph_height, 0]);
-            // append the svg obgect to the body of the page
-            // appends a 'group' element to 'svg'
-            // moves the 'group' element to the top left margin
-            // define the line
+
             var formatDateIntoYear = d3.timeFormat("%Y");
 
 
@@ -867,7 +907,7 @@
             g.select("#left_arrow")
                 .attr("width", 300)
                 .attr("height", 300)
-                .attr("x",graph_width - margin.right*1.13)
+                .attr("x",graph_width - margin.right*1.20)
                 .attr("y", graph_height/2)
                 .attr("viewBox", "0 0 200 200");
 
