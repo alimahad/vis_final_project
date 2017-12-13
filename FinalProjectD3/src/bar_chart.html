@@ -335,7 +335,16 @@
     #modal_graph_title, .year_title{
         font-size: large;
         font-weight: bold;
-        color: brown;
+
+    }
+    .text_info{
+        font-size: 11.5px;
+    }
+
+    .percent{
+        font-size: xx-large;
+        font-weight: bold;
+
     }
 
 </style>
@@ -672,11 +681,19 @@
                 .attr("class", "text_info")
                 .attr("id", "text_info_wage_country")
                 .attr("text-anchor", "middle");
+            box_wage.append("text")
+                .attr("class", "percent")
+                .attr("id", "text_info_percent_wage_country");
+
 
             box_wage.append("text") // content of text will be defined later
                 .attr("class", "text_info")
                 .attr("id", "text_info_wage_world")
                 .attr("text-anchor", "middle");
+            box_wage.append("text")
+                .attr("class", "percent")
+                .attr("id", "text_info_percent_wage_world");
+
 
             modal_g.append("g")
                 .attr("class", "g_box_emp")
@@ -691,6 +708,10 @@
                 .attr("id", "text_info_emp_country")
                 .attr("text-anchor", "middle");
 
+            box_emp.append("text")
+                .attr("class", "percent")
+                .attr("id", "text_info_percent_emp_country");
+
 
             box_emp.append("rect")
                 .attr("class", "rect_info")
@@ -702,6 +723,10 @@
                 .attr("class", "text_info")
                 .attr("id", "text_info_emp_world")
                 .attr("text-anchor", "middle");
+
+            box_emp.append("text")
+                .attr("class", "percent")
+                .attr("id", "text_info_percent_emp_world");
 
             modal_g.append("text") // content of text will be defined later
                 .attr("class", "year_title")
@@ -979,28 +1004,44 @@
 
 
             g.select("#text_info_wage_country")
-                .html(country + " wage gap change: " + addPositiveSign(Math.round(countryWageGapChange)) + "%")
+                .text(country + " wage gap change:")
                 .attr("fill", countryWageGapChange < 0 ? "black" : "white");
 
             g.select("#rect_info_wage_country")
                 .style("opacity", countryWageGapChange < 0 ? 0.5 : 0.9);
 
             g.select("#text_info_wage_world")
-                .text("World Average wage gap change: " + addPositiveSign(Math.round(worldWageGapChange)) + "%")
+                .text("World Average wage gap change: ")
                 .attr("fill", worldWageGapChange < 0 ? "black" : "white");
+
+            g.select("#text_info_percent_wage_world")
+                .text(addPositiveSign(Math.round(worldWageGapChange)) + "%")
+                .attr("fill", worldWageGapChange < 0 ? "black" : "white");
+
+            g.select("#text_info_percent_emp_country")
+                .text(addPositiveSign(Math.round(countryEmpGapChange)) + "%")
+                .attr("fill", countryEmpGapChange < 0 ? "black" : "white");
+
+            g.select("#text_info_percent_emp_world")
+                .text(addPositiveSign(Math.round(worldEmpGapChange)) + "%")
+                .attr("fill", worldEmpGapChange < 0 ? "black" : "white");
+
+            g.select("#text_info_percent_wage_country")
+                .text(addPositiveSign(Math.round(countryWageGapChange)) + "%")
+                .attr("fill", countryWageGapChange < 0 ? "black" : "white");
 
             g.select("#rect_info_wage_world")
                 .style("opacity", worldWageGapChange < 0 ? 0.5 : 0.9);
 
             g.select("#text_info_emp_country")
-                .html(country + " employment gap change: " + addPositiveSign(Math.round(countryEmpGapChange)) + "%")
+                .html(country + " employment gap change:")
                 .attr("fill", countryEmpGapChange < 0 ? "black" : "white");
 
             g.select("#rect_info_emp_country")
                 .style("opacity", countryEmpGapChange < 0 ? 0.5 : 0.9);
 
             g.select("#text_info_emp_world")
-                .text("World Average employment gap change: " + addPositiveSign(Math.round(worldEmpGapChange)) + "%")
+                .text("World Average employment gap change:")
                 .attr("fill", worldEmpGapChange < 0 ? "black" : "white");
 
             g.select("#rect_info_emp_world")
@@ -1327,7 +1368,7 @@
                 .attr("y", -5);
 
             g.select("#rank")
-                .attr("transform", "translate(" + (graph_width + margin.left) + "," + (margin.top/2 + graph_height/3) + ")");
+                .attr("transform", "translate(" + (graph_width + margin.left) + "," + (margin.top + graph_height/3) + ")");
             g.select("#axis_rank")
                 .attr("transform", "translate(0,0)")
                 .call(d3.axisBottom(x_for_rank));
@@ -1340,7 +1381,7 @@
                 })
                 .attr("cy", 0);
             g.select("#rank_emp")
-                .attr("transform", "translate(" + (graph_width + margin.left) + "," + (graph_height/2 + margin.top/2 + graph_height/3) + ")");
+                .attr("transform", "translate(" + (graph_width + margin.left) + "," + (graph_height/2 + margin.top + graph_height/3) + ")");
             g.select("#axis_rank_emp")
                 .attr("transform", "translate(0,0)")
                 .call(d3.axisBottom(x_for_rank));
@@ -1370,34 +1411,51 @@
                 .attr("width", (graph_width - margin.left)/2)
                 .attr("height",  graph_height/4);
 
+            g.select(".g_box_emp")
+                .attr("transform", "translate(" + (graph_width + margin.left) + "," + (graph_height/2 + margin.top/2) + ")")
+                .attr("width", (graph_width - margin.left)/2)
+                .attr("height",  graph_height/4);
+
             g.select("#text_info_wage_country")
-                .attr("x", function(d) { return 140; })
-                .attr("y", function(d) { return 220; });
+                .attr("x", margin.left* 2 )
+                .attr("y", margin.top*1.2);
             g.select("#text_info_wage_world")
-                .attr("x", function(d) { return 470; })
-                .attr("y", function(d) { return 220; });
+                .attr("x", margin.left* 2 + ((graph_width - margin.left)/2))
+                .attr("y",  margin.top*1.2);
+            g.select("#text_info_percent_wage_country")
+                .attr("x", margin.left* 1.6 )
+                .attr("y", margin.top*2.6);
+            g.select("#text_info_percent_wage_world")
+                .attr("x", margin.left* 1.6 + ((graph_width - margin.left)/2))
+                .attr("y", margin.top*2.6);
 
             g.select("#rect_info_wage_world")
-                .attr("x",  (graph_width - margin.left)/1.98 )
+                .attr("x",  (graph_width - margin.left)/1.98  )
                 .attr("y",  margin.top/2)
                 .attr("width", (graph_width - margin.left)/2)
                 .attr("height",  graph_height/4);
 
+            g.select("#text_info_emp_country")
+                .attr("x",  margin.left* 2)
+                .attr("y",  margin.top*1.2);
+            g.select("#text_info_emp_world")
+                .attr("x", margin.left* 2 + ((graph_width - margin.left)/2))
+                .attr("y",  margin.top*1.2);
+            g.select("#text_info_percent_emp_country")
+                .attr("x", margin.left* 1.6 )
+                .attr("y", margin.top*2.6);
+            g.select("#text_info_percent_emp_world")
+                .attr("x", margin.left* 1.6 + ((graph_width - margin.left)/2))
+                .attr("y", margin.top*2.6);
+
             g.select("#rect_info_emp_country")
-                .attr("x", graph_width + margin.left)
-                .attr("y", graph_height/2 + margin.top/2)
+                .attr("x", 0)
+                .attr("y", (margin.top/2) )
                 .attr("width", (graph_width - margin.left)/2 )
                 .attr("height", graph_height/4);
-
-            g.select("#text_info_emp_country")
-                .attr("x", 50)
-                .attr("y", 50);
-            g.select("#text_info_emp_world")
-                .attr("x", 50)
-                .attr("y", 50);
             g.select("#rect_info_emp_world")
-                .attr("x",  graph_width +  ((graph_width)/2) + margin.left/1.8)
-                .attr("y",  graph_height/2 + margin.top/2)
+                .attr("x",  (graph_width - margin.left)/1.98 )
+                .attr("y",  (margin.top/2))
                 .attr("width", (graph_width - margin.left)/2)
                 .attr("height",  graph_height/4);
             g.select(".year_title")
