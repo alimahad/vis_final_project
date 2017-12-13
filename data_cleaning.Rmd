@@ -47,8 +47,9 @@ employ_rate_avg <-
   mutate(LOCATION = "WRD") %>%
   mutate(Country = "World Average") %>%
   select(LOCATION, TIME, Value, Country)
-  
-  
+```
+```{r}
+employ_rate_final <- rbind(employ_rate, employ_rate_avg)  
    # filter(TIME >= 2005)
 #employ_rate$TIME <- as.factor(employ_rate$TIME)
 
@@ -57,7 +58,7 @@ employ_rate_avg <-
 
 ```{r}
 
-write.csv(employ_rate, "employ_rate_final.csv")
+write.csv(employ_rate_final, "employ_rate_final.csv")
 ```
 
 ```{r}
@@ -121,13 +122,20 @@ country_codes <-
 
 wage_gap <- 
   wage_gap %>%
-  left_join(country_codes, by = c("LOCATION" = "CODE"))
+  left_join(country_codes, by = c("LOCATION" = "CODE")) %>%
+```
+```{r}
+wage_gap <-
+  wage_gap %>%
+  select(LOCATION, TIME, Value, Country)
    
 
 ```
-
 ```{r}
-write.csv( wage_gap,"wagegap_only.csv")
+wage_gap_final = rbind(wage_gap, wage_gap_avg)
+```
+```{r}
+write.csv( wage_gap_final,"wagegap_only.csv")
 ```
 
 ```{r}
