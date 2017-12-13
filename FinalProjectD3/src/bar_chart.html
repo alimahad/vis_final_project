@@ -347,6 +347,12 @@
 
     }
 
+    #sub_heading{
+        font-size: 1.5vw;
+
+
+    }
+
 </style>
 <body>
 <svg class="chart"></svg>
@@ -572,6 +578,11 @@
             g.append("text")
                 .attr("class", "title")
                 .text("Gender Wage Gap in OECD Countries");
+            g.append("text")
+                .attr("dy", "0.71em")
+                .attr("text-anchor", "end")
+                .attr("id", "sub_heading")
+                .text("Wage gap as a percentage of male wage as of 2014");
 
 
             g.selectAll(".bar")
@@ -775,6 +786,10 @@
             g.selectAll(".title")
                 .attr("x", width / 2)
                 .attr("y", height * 0.04);
+            g.select("#sub_heading")
+                .attr("x", (width / 1.5))
+                .attr("y", height* 0.1);
+
 
             g.selectAll(".bar")
                 .attr("id", function (d) {
@@ -805,13 +820,9 @@
             g.select(".axis--y")
                 .call(d3.axisLeft(y).ticks(10).tickFormat(function (d) {
                     return d + "%"
-                }))
-                .append("text")
-                .attr("transform", "rotate(-90)")
-                .attr("y", 6)
-                .attr("dy", "0.71em")
-                .attr("text-anchor", "end")
-                .text("Wage gap as a percentage of male wage");
+                }));
+
+
         }
 
         function data_for_year(year, data) {
