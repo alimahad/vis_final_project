@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <style>
+
+rect {
+  stroke:none;
+}
+
 .bar {
   fill: steelblue;
 }
@@ -38,6 +43,11 @@ div.tooltip {
 <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
 <script src="index.js"></script>
 <script>
+
+
+var width = 960,
+    height = 500;
+
 
 // var tip = d3.tip()
 //   .attr('class', 'd3-tip')
@@ -83,6 +93,34 @@ d3.csv("data/wagegap_only2.csv", function(d) {
 
   y.domain([0, 0]);
 
+
+
+
+
+
+  function filterDataByYear(countryData, nameCountry, min, max){
+    for (var i = 0; i < countryData.length; i++) {
+      var row = countryData[i];
+      if (row['Country'] == nameCountry) {
+        return row['Year2000'] - row['Year2016'];
+      }
+    }
+  }
+
+  function opposingColor(value){
+    if(value > 0.5){
+      return "white"
+    } else {
+      return "black"
+    }
+  }
+
+
+
+  var wageGapChange = filterDataByYear(data,"AUT","Year2000","Year2016");
+  var wageGapChange2 = filterDataByYear(data,"World Average","Year2000","Year2016");
+
+
   
 
   g.append("g")
@@ -104,6 +142,38 @@ d3.csv("data/wagegap_only2.csv", function(d) {
     .datum(data)
     .attr("class", "line")
     .attr("d", line);
+
+  g.append("rect")
+    .attr("x", function(d) { return 0; })
+    .attr("y", function(d) { return 200; })
+    .attr("width", function(d) { return 290; })
+    .attr("height", function(d) { return 30; })
+    .attr("fill", "#003399")
+    .style("opacity", wageGapChange/10);
+
+  g.append("text") // content of text will be defined later
+    .attr("x", function(d) { return 140; })
+    .attr("y", function(d) { return 220; })
+    .text("Wage gap change during 1992-2016: "  + Math.round(wageGapChange) + "%")
+    .attr("fill", opposingColor(wageGapChange/10))
+    .attr("text-anchor", "middle");
+
+
+  g.append("rect")
+    .attr("x", function(d) { return 310; })
+    .attr("y", function(d) { return 200; })
+    .attr("width", function(d) { return 330; })
+    .attr("height", function(d) { return 30; })
+    .attr("fill", "#003399")
+    .style("opacity", wageGapChange2/10);
+
+
+  g.append("text") // content of text will be defined later
+    .attr("x", function(d) { return 470; })
+    .attr("y", function(d) { return 220; })
+    .text("World wage gap change during 1992-2016: "  + Math.round(wageGapChange2) + "%")
+    .attr("fill", opposingColor(wageGapChange2/10))
+    .attr("text-anchor", "middle");
 
   g.selectAll("circle")
     .data(data)
