@@ -20,3 +20,13 @@ The pop-up also shows information of the percentage difference in wage gap and e
 It also shows the countries ranked in terms of how much they have improved in the time period. Users can click in a country in the rank to see the detailed data for that country. 
 The user can navigate the data by clicking in the arrows to the side of the pop-up.
 
+### D3 tutorials and code examples
+Here are some of the tutorials and examples we looked into to figure out D3. We are grateful to the authors for making those resources available.
+
+* [How to make a bar chart in D3](https://bost.ocks.org/mike/bar/) (good introduction to D3) 
+* [Slider example 1](https://bl.ocks.org/mbostock/6452972)
+* [Slider example 2](https://github.com/evoluteur/d3-dual-range-slider/tree/master/js)
+* [Responsive design in D3](https://blog.webkid.io/responsive-chart-usability-d3/)
+    
+  
+
