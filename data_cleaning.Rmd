@@ -29,8 +29,9 @@ employ_rate <-
   filter(!grepl('-', TIME)) %>%
   filter(grepl('PC_WKGPOP', MEASURE)) %>%
   filter(TIME >= 2000) %>%
+  filter(TIME <= 2014) %>%
   filter(LOCATION != "OECD", LOCATION != "EU28", LOCATION != "G-7",  LOCATION != "EA19")%>%
-  filter(LOCATION != 'LTU' && LOCATION != 'CRI')
+  filter(LOCATION != 'LTU', LOCATION != 'CRI')
 
 
 employ_rate <-
@@ -68,8 +69,10 @@ wage_gap <-
   wage_gap %>%
   filter(SUBJECT == 'TOT') %>%
   filter(LOCATION != 'EU28') %>%
-  filter(LOCATION != 'LTU' && LOCATION != 'CRI') %>%
-  filter(TIME >= 2000)
+  filter(LOCATION != 'LTU') %>%
+  filter(LOCATION != 'CRI') %>%
+  filter(TIME >= 2000) %>%
+  filter(TIME <= 2014)
 
 wage_gap_avg <- 
 wage_gap %>%
@@ -122,7 +125,7 @@ country_codes <-
 
 wage_gap <- 
   wage_gap %>%
-  left_join(country_codes, by = c("LOCATION" = "CODE")) %>%
+  left_join(country_codes, by = c("LOCATION" = "CODE"))
 ```
 ```{r}
 wage_gap <-
@@ -162,4 +165,20 @@ joint_data2$genderDiff[emp_rat] = na.approx(joint_data2$genderDiff)
 ```
 ```{r}
 write.csv(joint_data2, "employ_wage_data2.csv")
+```
+
+```{r}
+employ_rate_final_rank<-
+  employ_rate %>% 
+  spread(TIME, Value, fill = NA, convert = FALSE)
+```
+
+```{r}
+employ_rate_final_rank<-
+  employ_rate %>% 
+  spread(TIME, Value, fill = NA, convert = FALSE)
+```
+
+```{r}
+write.csv(employ_rate_final_rank, "employ_rate_final_rank.csv")
 ```

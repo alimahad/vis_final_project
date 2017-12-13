@@ -295,7 +295,7 @@
         transition: all 100ms ease-in-out;
     }
 
-    .rank_circle {
+    .rank_circle, .rank_circle_emp {
         opacity: 0.3;
         cursor: pointer;
     }
@@ -314,26 +314,28 @@
     .WRD{
         opacity: 0.8;
     }
-    #axis_rank {
+    #axis_rank, #axis_rank_emp {
         font-size: 8px;
 
     }
-    #axis_rank line{
+    #axis_rank line, #axis_rank path, #axis_rank_emp line, #axis_rank_emp path{
        stroke: gray;
 
     }
-    #axis_rank path{
-        stroke: gray;
-
-    }
-
-
 
     .year_tooltip {
         margin: 0 0 0 60px;
         padding-bottom: 0px;
         font-size: x-large;
         font-weight: bold;
+    }
+    .rank_label{
+        font-size: 14px
+    }
+    #modal_graph_title, .year_title{
+        font-size: large;
+        font-weight: bold;
+        color: brown;
     }
 
 </style>
@@ -355,7 +357,13 @@
                     d3.csv("data/wagegap_only2.csv", function (err, wage_gap_rank) {
                         if (err) console.log("Error loading data " + err);
                         else {
-                            initAllGraphElements(wage_data, emp_data, wage_gap_rank);
+                            d3.csv("data/employ_rate_final_rank.csv", function (err, emp_gap_rank) {
+                                if (err) console.log("Error loading data " + err);
+                                else {
+                                    initAllGraphElements(wage_data, emp_data, wage_gap_rank, emp_gap_rank);
+                                }
+                            })
+
                         }
                     })
 
@@ -363,7 +371,7 @@
             });
         }
 
-        function initAllGraphElements(wage_data, emp_data, wage_gap_rank) {
+        function initAllGraphElements(wage_data, emp_data, wage_gap_rank, emp_gap_rank) {
             // parse the date / time
             var parseTime = d3.timeParse("%Y");
             wage_data.forEach(function (d) {
@@ -397,6 +405,28 @@
                 d.Year2016 = +d.Year2016;
 
             });
+
+            emp_gap_rank.forEach(function (d) {
+                d.Year2000 = +d.Year2000;
+                d.Year2001 = +d.Year2001;
+                d.Year2002 = +d.Year2002;
+                d.Year2003 = +d.Year2003;
+                d.Year2004 = +d.Year2004;
+                d.Year2005 = +d.Year2005;
+                d.Year2006 = +d.Year2006;
+                d.Year2007 = +d.Year2007;
+                d.Year2008 = +d.Year2008;
+                d.Year2009 = +d.Year2009;
+                d.Year2010 = +d.Year2010;
+                d.Year2011 = +d.Year2011;
+                d.Year2012 = +d.Year2012;
+                d.Year2013 = +d.Year2013;
+                d.Year2014 = +d.Year2014;
+                d.Year2015 = +d.Year2015;
+                d.Year2016 = +d.Year2016;
+
+            });
+
 
             var data = data_for_year(parseTime("2014"), wage_data);
             data.sort(function (d1, d2) {
@@ -552,7 +582,7 @@
                 .on("click", function (d) {
 
                     modal.style("display", "block");
-                    create_graph_modal(d.Country, wage_data, emp_data, wage_gap_rank, countryList);
+                    create_graph_modal(d.Country, wage_data, emp_data, wage_gap_rank, emp_gap_rank, countryList);
 
                 });
 
@@ -601,6 +631,21 @@
                 .attr("class", "line")
                 .attr("id", "line_rank");
 
+            modal_g.append("g")
+                .attr("id", "rank_emp")
+                .append("g")
+                .attr("class", "axis axis--x")
+                .attr("id", "axis_rank_emp");
+            modal_g.select("#rank_emp").append("path")
+                .attr("class", "line")
+                .attr("id", "line_rank_emp");
+            modal_g.select("#rank_emp").append("text")
+                .attr("class", "rank_label")
+                .attr("id", "rank_label_emp");
+            modal_g.select("#rank").append("text")
+                .attr("class", "rank_label")
+                .attr("id", "rank_label_wage");
+
             var slider = modal_g.select(".slider");
             slider.insert("circle")
                 .attr("class", "handle")
@@ -608,6 +653,60 @@
             slider.insert("circle")
                 .attr("class", "handle")
                 .attr('id', "start_date_handle");
+
+            modal_g.append("g")
+                .attr("class", "g_box_wage")
+                .append("rect")
+                .attr("class", "rect_info")
+                .attr("id", "rect_info_wage_world")
+                .attr("fill", "#003399");
+
+            var box_wage =   modal_g.select(".g_box_wage");
+
+            box_wage.append("rect")
+                .attr("class", "rect_info")
+                .attr("id", "rect_info_wage_country")
+                .attr("fill", "#003399");
+
+            box_wage.append("text")
+                .attr("class", "text_info")
+                .attr("id", "text_info_wage_country")
+                .attr("text-anchor", "middle");
+
+            box_wage.append("text") // content of text will be defined later
+                .attr("class", "text_info")
+                .attr("id", "text_info_wage_world")
+                .attr("text-anchor", "middle");
+
+            modal_g.append("g")
+                .attr("class", "g_box_emp")
+                .append("rect")
+                .attr("class", "rect_info")
+                .attr("id", "rect_info_emp_country")
+                .attr("fill", "#003399");
+            var box_emp =   modal_g.select(".g_box_emp");
+
+            box_emp.append("text")
+                .attr("class", "text_info")
+                .attr("id", "text_info_emp_country")
+                .attr("text-anchor", "middle");
+
+
+            box_emp.append("rect")
+                .attr("class", "rect_info")
+                .attr("id", "rect_info_emp_world")
+                .attr("fill", "#003399");
+
+
+            box_emp.append("text") // content of text will be defined later
+                .attr("class", "text_info")
+                .attr("id", "text_info_emp_world")
+                .attr("text-anchor", "middle");
+
+            modal_g.append("text") // content of text will be defined later
+                .attr("class", "year_title")
+                .attr("text-anchor", "middle");
+
 
             render();
 
@@ -701,7 +800,7 @@
             return temp;
         }
 
-        function create_graph_modal(country, wage_data_all, emp_data_all, wage_gap_rank, countryList, minMaxYear) {
+        function create_graph_modal(country, wage_data_all, emp_data_all, wage_gap_rank, emp_gap_rank, countryList, minMaxYear) {
             var modal_g = d3.select(".modal-body")
                 .select("g");
             var svg = modal_g.select("#modal_svg");
@@ -731,6 +830,9 @@
             x_modal = d3.scaleTime().domain([parseTime(String(minMaxYear[0].getFullYear() - 1)), parseTime(String(minMaxYear[1].getFullYear() + 1))]);
             // x.domain([d3.min(data, function(d) { return d.TIME; }), d3.max(data, function(d) { return d.TIME; })]);
             y_modal = d3.scaleLinear().domain([0, 100]);
+            emp_gap_rank.sort(function (a, b) {
+                return d3.ascending(a['Year' + minMaxYear[1].getFullYear()] - a['Year' + minMaxYear[0].getFullYear()], b['Year' + minMaxYear[1].getFullYear()] - b['Year' + minMaxYear[0].getFullYear()])
+            });
             wage_gap_rank.sort(function (a, b) {
                 return d3.ascending(a['Year' + minMaxYear[1].getFullYear()] - a['Year' + minMaxYear[0].getFullYear()], b['Year' + minMaxYear[1].getFullYear()] - b['Year' + minMaxYear[0].getFullYear()])
             });
@@ -750,11 +852,11 @@
                 .data([wage_data_avg]);
             g.select("#employ_line_avg")
                 .data([emp_data_avg]);
-
+            var modal_tooltip = d3.select("#modal_tooltip");
 
             g.select("#line_rank")
                 .datum(wage_gap_rank);
-            var modal_tooltip = d3.select("#modal_tooltip");
+
             g.select("#rank").selectAll(".rank_circle").remove();
             g.select("#rank").selectAll(".rank_circle")
                 .data(wage_gap_rank)
@@ -779,8 +881,40 @@
                     modal_tooltip.style("display", "none");
                 })
                 .on("click", function (d) {
-                    create_graph_modal(d.CountryName, wage_data_all, emp_data_all, wage_gap_rank, countryList, minMaxYear);
+                    create_graph_modal(d.CountryName, wage_data_all, emp_data_all, wage_gap_rank, emp_gap_rank, countryList, minMaxYear);
                 });
+
+            g.select("#rank_emp").selectAll(".rank_circle_emp").remove();
+            g.select("#rank_emp").selectAll(".rank_circle_emp")
+                .data(emp_gap_rank)
+                .enter().append("circle")
+                .attr("class", function (d) {
+                    var currentCountry = (d.CountryName === country) ? " currentCountry" : "";
+                    var wrd = (d.CountryName === "World Average") ? " WRD" : "";
+                    return "rank_circle_emp" + currentCountry + wrd;
+                })
+                .on("mouseover", function (d, i) {
+                    var val = addPositiveSign(Math.round(d['Year' + minMaxYear[1].getFullYear()] - d['Year' + minMaxYear[0].getFullYear()]));
+                    modal_tooltip
+                        .html("<p class = 'countryName rank_tooltip_title'>" + d.CountryName + ": " + getOrdinal(i+1) + "</p>" +
+                            "<span class = 'countryName'> % Change in Employment Gap from " + minMaxYear[0].getFullYear() + " to "
+                            + minMaxYear[1].getFullYear() + ": </span><span class = 'countryValue'>"
+                            + val + "%</span>")
+                        .style("display", "inline-block")
+                        .style("left", (d3.event.pageX - 100) + "px")
+                        .style("top", (d3.event.pageY - 70) + "px");
+                })
+                .on("mouseout", function (d) {
+                    modal_tooltip.style("display", "none");
+                })
+                .on("click", function (d) {
+                    create_graph_modal(d.CountryName, wage_data_all, emp_data_all, wage_gap_rank,emp_gap_rank, countryList, minMaxYear);
+                });
+
+            g.select("#rank_label_emp")
+                .text("Countries ranked by largest employment gap decrease to largest gap increase");
+            g.select("#rank_label_wage")
+                .html("Countries ranked by largest wage gap decrease to largest gap increase");
 
 
             g.selectAll(".wage_dot").remove();
@@ -827,15 +961,53 @@
                     console.log(currentIndex + " " + country + " / " + countryList.length);
                     if (currentIndex === countryList.length - 1) currentIndex = 0;
                     else currentIndex = currentIndex + 1;
-                    create_graph_modal(countryList[currentIndex], wage_data_all, emp_data_all, wage_gap_rank, countryList);
+                    create_graph_modal(countryList[currentIndex], wage_data_all, emp_data_all, wage_gap_rank,emp_gap_rank, countryList);
                 });
             g.select("#left_arrow")
                 .on("click", function () {
                     var currentIndex = countryList.indexOf(country);
                     if (currentIndex === 0) currentIndex = countryList.length - 1;
                     else currentIndex = currentIndex - 1;
-                    create_graph_modal(countryList[currentIndex], wage_data_all, emp_data_all, wage_gap_rank, countryList);
+                    create_graph_modal(countryList[currentIndex], wage_data_all, emp_data_all, wage_gap_rank,emp_gap_rank, countryList);
                 });
+
+            var countryWageGapChange = getCountryChangeOverTime(wage_gap_rank,country,"Year" + minMaxYear[0].getFullYear(),"Year" + minMaxYear[1].getFullYear());
+            var worldWageGapChange = getCountryChangeOverTime(wage_gap_rank,"World Average", "Year" + minMaxYear[0].getFullYear(),"Year" + minMaxYear[1].getFullYear());
+
+            var countryEmpGapChange = getCountryChangeOverTime(emp_gap_rank,country,"Year" + minMaxYear[0].getFullYear(),"Year" + minMaxYear[1].getFullYear());
+            var worldEmpGapChange = getCountryChangeOverTime(emp_gap_rank,"World Average", "Year" + minMaxYear[0].getFullYear(),"Year" + minMaxYear[1].getFullYear());
+
+
+            g.select("#text_info_wage_country")
+                .html(country + " wage gap change: " + addPositiveSign(Math.round(countryWageGapChange)) + "%")
+                .attr("fill", countryWageGapChange < 0 ? "black" : "white");
+
+            g.select("#rect_info_wage_country")
+                .style("opacity", countryWageGapChange < 0 ? 0.5 : 0.9);
+
+            g.select("#text_info_wage_world")
+                .text("World Average wage gap change: " + addPositiveSign(Math.round(worldWageGapChange)) + "%")
+                .attr("fill", worldWageGapChange < 0 ? "black" : "white");
+
+            g.select("#rect_info_wage_world")
+                .style("opacity", worldWageGapChange < 0 ? 0.5 : 0.9);
+
+            g.select("#text_info_emp_country")
+                .html(country + " employment gap change: " + addPositiveSign(Math.round(countryEmpGapChange)) + "%")
+                .attr("fill", countryEmpGapChange < 0 ? "black" : "white");
+
+            g.select("#rect_info_emp_country")
+                .style("opacity", countryEmpGapChange < 0 ? 0.5 : 0.9);
+
+            g.select("#text_info_emp_world")
+                .text("World Average employment gap change: " + addPositiveSign(Math.round(worldEmpGapChange)) + "%")
+                .attr("fill", worldEmpGapChange < 0 ? "black" : "white");
+
+            g.select("#rect_info_emp_world")
+                .style("opacity", worldEmpGapChange < 0 ? 0.5 : 0.9);
+
+            g.select(".year_title")
+                .text("From " + minMaxYear[0].getFullYear() + " to " + minMaxYear[1].getFullYear() + ":");
 
             x_for_slider = d3.scaleTime().domain(d3.extent(wage_min_max_years.concat(emp_min_max_years)));
 
@@ -894,7 +1066,7 @@
                 var minYear = x_for_slider.invert(handle1.attr("cx"));
                 var maxYear = x_for_slider.invert(handle2.attr("cx"));
                 var minmax = [minYear, maxYear];
-                create_graph_modal(country, wage_data_all, emp_data_all, wage_gap_rank, countryList, minmax)
+                create_graph_modal(country, wage_data_all, emp_data_all, wage_gap_rank,emp_gap_rank, countryList, minmax)
             }
 
         }
@@ -913,6 +1085,23 @@
                 return n.toString();
             }
         }
+        function opposingColor(value){
+            if(value > 0.5){
+                return "white"
+            } else {
+                return "black"
+            }
+        }
+
+        function getCountryChangeOverTime(countryData, nameCountry, min, max){
+            for (var i = 0; i < countryData.length; i++) {
+                var row = countryData[i];
+                if (row['CountryName'] === nameCountry) {
+                    return row[max] - row[min];
+                }
+            }
+        }
+
 
         function filterDataByYear(countryData, minMaxYear) {
             var temp = [];
@@ -989,6 +1178,12 @@
                     return x_for_rank(i + 1);
                 })
                 .y(0);
+            var rank_line_emp = d3.line()
+                .x(function (d, i) {
+                    return x_for_rank(i + 1);
+                })
+                .y(0);
+
 
             var svg = d3.select("#modal_svg")
                 .attr("width", width + margin.left + margin.right)
@@ -1128,11 +1323,11 @@
                 .attr("r", graph_width * 0.015);
 
             g.select("#modal_graph_title")
-                .attr("x", (graph_width / 2) - margin.left * 3)
+                .attr("x", (graph_width / 2) - margin.left * 4)
                 .attr("y", -5);
 
             g.select("#rank")
-                .attr("transform", "translate(" + (graph_width + margin.left) + "," + (graph_height - 0.5 * margin.bottom) + ")");
+                .attr("transform", "translate(" + (graph_width + margin.left) + "," + (margin.top/2 + graph_height/3) + ")");
             g.select("#axis_rank")
                 .attr("transform", "translate(0,0)")
                 .call(d3.axisBottom(x_for_rank));
@@ -1144,6 +1339,74 @@
                     return x_for_rank(i + 1);
                 })
                 .attr("cy", 0);
+            g.select("#rank_emp")
+                .attr("transform", "translate(" + (graph_width + margin.left) + "," + (graph_height/2 + margin.top/2 + graph_height/3) + ")");
+            g.select("#axis_rank_emp")
+                .attr("transform", "translate(0,0)")
+                .call(d3.axisBottom(x_for_rank));
+            g.select("#line_rank")
+                .attr("d", rank_line_emp);
+            g.selectAll(".rank_circle_emp")
+                .attr("r", 5)
+                .attr("cx", function (d, i) {
+                    return x_for_rank(i + 1);
+                })
+                .attr("cy", 0);
+            g.select("#rank_label_emp")
+                .attr("x", 0)
+                .attr("y", 30);
+            g.select("#rank_label_wage")
+                .attr("x", 0)
+                .attr("y", 30);
+
+            g.select("#rect_info_wage_country")
+                .attr("x", 0)
+                .attr("y", margin.top/2)
+                .attr("width", (graph_width - margin.left)/2 )
+                .attr("height", graph_height/4);
+
+            g.select(".g_box_wage")
+                .attr("transform", "translate(" + (graph_width + margin.left) + "," + margin.top/2 + ")")
+                .attr("width", (graph_width - margin.left)/2)
+                .attr("height",  graph_height/4);
+
+            g.select("#text_info_wage_country")
+                .attr("x", function(d) { return 140; })
+                .attr("y", function(d) { return 220; });
+            g.select("#text_info_wage_world")
+                .attr("x", function(d) { return 470; })
+                .attr("y", function(d) { return 220; });
+
+            g.select("#rect_info_wage_world")
+                .attr("x",  (graph_width - margin.left)/1.98 )
+                .attr("y",  margin.top/2)
+                .attr("width", (graph_width - margin.left)/2)
+                .attr("height",  graph_height/4);
+
+            g.select("#rect_info_emp_country")
+                .attr("x", graph_width + margin.left)
+                .attr("y", graph_height/2 + margin.top/2)
+                .attr("width", (graph_width - margin.left)/2 )
+                .attr("height", graph_height/4);
+
+            g.select("#text_info_emp_country")
+                .attr("x", 50)
+                .attr("y", 50);
+            g.select("#text_info_emp_world")
+                .attr("x", 50)
+                .attr("y", 50);
+            g.select("#rect_info_emp_world")
+                .attr("x",  graph_width +  ((graph_width)/2) + margin.left/1.8)
+                .attr("y",  graph_height/2 + margin.top/2)
+                .attr("width", (graph_width - margin.left)/2)
+                .attr("height",  graph_height/4);
+            g.select(".year_title")
+                .attr("x", 1.5*graph_width)
+                .attr("y", - 5);
+
+
+
+
         }
 
 
